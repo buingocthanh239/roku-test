@@ -1,0 +1,68 @@
+[
+  {
+    "domain": "samsung",
+    "updated": "June 1, 2026",
+    "steps": [
+      {"title": "Enable IP Control on your Samsung TV", "body": "On your Samsung TV go to Settings → General → External Device Manager → Device Connect Manager → Access Notification and set it to First Time Only or Always Allow."},
+      {"title": "Connect iPhone and TV to the same Wi-Fi", "body": "Make sure your iPhone and Samsung TV are connected to the same home Wi-Fi network. This is required for Wi-Fi remote control."},
+      {"title": "Open Universal TV Remote and tap Add TV", "body": "Launch the Universal TV Remote app on your iPhone, tap the + button at the top right, then select Samsung from the brand list."},
+      {"title": "Auto-detect your Samsung TV", "body": "The app will scan your network and display your TV. Tap it to connect. If not found, tap Enter IP Manually and input the IP shown under Settings → General → Network → Network Status on your TV."},
+      {"title": "Accept the pairing request on your TV", "body": "Your Samsung TV will show a pairing prompt. Select Allow to complete the connection."},
+      {"title": "Start controlling your TV", "body": "The Samsung remote layout will appear in the app. You can now control power, volume, channels, Smart Hub, and launch apps directly from your iPhone."}
+    ]
+  },
+  {
+    "domain": "lg",
+    "updated": "June 1, 2026",
+    "steps": [
+      {"title": "Enable LG Mobile TV On", "body": "On your LG TV go to Settings → All Settings → General → Mobile TV On and turn it on. This allows the TV to be controlled even from standby."},
+      {"title": "Connect both devices to the same network", "body": "Ensure your iPhone and LG TV share the same Wi-Fi network."},
+      {"title": "Open Universal TV Remote and add your LG TV", "body": "In the app, tap +, select LG, and let the app auto-detect your WebOS TV."},
+      {"title": "Authorize the connection on your TV", "body": "A prompt will appear on your LG TV asking to allow remote access. Select Accept."},
+      {"title": "Use Magic Remote features", "body": "The app replicates LG Magic Remote functions including pointer mode, gesture control, and quick access to LG content store."}
+    ]
+  },
+  {
+    "domain": "sony",
+    "updated": "June 1, 2026",
+    "steps": [
+      {"title": "Enable Remote Start on Sony TV", "body": "Go to Settings → Network → Remote Start and turn it On. This allows the app to wake your Sony TV from standby."},
+      {"title": "Enable IP control", "body": "Go to Settings → Network → IP Control and set Authentication to Normal and Pre-Shared Key. Note the IP from Settings → Network → Network Setup → View Network Status."},
+      {"title": "Add your Sony TV in the app", "body": "Open Universal TV Remote, tap +, select Sony, and let it auto-discover your TV on the network."},
+      {"title": "Enter the pre-shared key if prompted", "body": "If your Sony TV requires a pre-shared key, enter the key you set in the IP Control settings (default is usually empty or 0000)."},
+      {"title": "Control Google TV or Android TV features", "body": "Once connected, you have full access to Google Assistant commands, app launcher, and Google TV home screen navigation."}
+    ]
+  },
+  {
+    "domain": "tcl",
+    "updated": "June 1, 2026",
+    "steps": [
+      {"title": "Find your TCL Roku TV on the network", "body": "On your TCL Roku TV press the Home button, go to Settings → System → About to see the device name and network info."},
+      {"title": "Enable Roku external control", "body": "Go to Settings → System → Advanced System Settings → External Control and enable Network Access."},
+      {"title": "Connect iPhone to the same Wi-Fi", "body": "Make sure your iPhone is on the same Wi-Fi network as the TCL TV."},
+      {"title": "Add TCL TV in Universal TV Remote", "body": "Open the app, tap +, select TCL (Roku TV), and the app will find your TV automatically."},
+      {"title": "Control Roku interface", "body": "You now have full Roku interface control including the home screen, search, voice search, and direct app launch from your iPhone."}
+    ]
+  },
+  {
+    "domain": "hisense",
+    "updated": "June 1, 2026",
+    "steps": [
+      {"title": "Enable VIDAA Remote Service", "body": "On your Hisense TV go to Settings → Support → Mobile Device Connection and turn on the remote service."},
+      {"title": "Note the TV IP address", "body": "Go to Settings → Network → Network Status to find your TV IP address."},
+      {"title": "Add Hisense TV in the app", "body": "Open Universal TV Remote, tap +, select Hisense, and let the app scan your network."},
+      {"title": "Pair and connect", "body": "The app will find your VIDAA Smart TV. Tap it to pair and connect in seconds."},
+      {"title": "Enjoy full control", "body": "Control VIDAA platform navigation, adjust gaming mode settings, and launch streaming apps directly from your iPhone."}
+    ]
+  },
+  {
+    "domain": "roku",
+    "updated": "June 1, 2026",
+    "steps": [
+      {"title": "Enable Roku external control protocol", "body": "On your Roku device press Home, go to Settings → System → Advanced System Settings → External Control → Network Access and set to Default or Permissive."},
+      {"title": "Connect to the same Wi-Fi", "body": "Your iPhone must be on the same Wi-Fi as your Roku TV or stick."},
+      {"title": "Add Roku in Universal TV Remote", "body": "Tap +, select Roku, and the app auto-discovers your device instantly."},
+      {"title": "Control and launch channels", "body": "Use the Roku directional pad, launch any channel by name, and use the built-in keyboard for faster text input than the on-screen keyboard."}
+    ]
+  }
+]

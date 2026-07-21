@@ -1,0 +1,35 @@
+# Secrets — DB passwords and WP salts live here. .env.example is the template.
+.env
+.env.*
+!.env.example
+
+# Compose overrides are per-developer machine config
+docker-compose.override.yml
+
+# WordPress runtime state. Uploads live in the wp_uploads volume; anything
+# WordPress writes into the webroot is disposable (the image is the source of
+# truth for code).
+wp-content/uploads/
+wp-content/upgrade/
+wp-content/cache/
+wp-content/languages/
+wp-content/debug.log
+wp-config.php
+
+# Local DB dumps other than the committed seed. Re-export the seed
+# deliberately, don't let ad-hoc dumps land in the repo.
+db/*.sql
+!db/seed.sql
+*.sql.gz
+*.tar.gz
+
+# Dependencies / build output
+node_modules/
+vendor/
+
+# Editors & OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

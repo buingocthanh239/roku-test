@@ -1,0 +1,74 @@
+name: roku-tv-remote
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-wordpress}
+      MYSQL_USER: ${DB_USER:-wordpress}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?set DB_ROOT_PASSWORD in .env}
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./db:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  wordpress:
+    image: 762871078113.dkr.ecr.ap-southeast-1.amazonaws.com/roku-tv-wordpress:dev 
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_NAME: ${DB_NAME:-wordpress}
+      WORDPRESS_DB_USER: ${DB_USER:-wordpress}
+      WORDPRESS_DB_PASSWORD: ${DB_PASSWORD:?set DB_PASSWORD in .env}
+      WORDPRESS_TABLE_PREFIX: wp_
+      WORDPRESS_DEBUG: 0
+
+      WORDPRESS_AUTH_KEY: ${WP_AUTH_KEY:?set WP_AUTH_KEY in .env}
+      WORDPRESS_SECURE_AUTH_KEY: ${WP_SECURE_AUTH_KEY:?set WP_SECURE_AUTH_KEY in .env}
+      WORDPRESS_LOGGED_IN_KEY: ${WP_LOGGED_IN_KEY:?set WP_LOGGED_IN_KEY in .env}
+      WORDPRESS_NONCE_KEY: ${WP_NONCE_KEY:?set WP_NONCE_KEY in .env}
+      WORDPRESS_AUTH_SALT: ${WP_AUTH_SALT:?set WP_AUTH_SALT in .env}
+      WORDPRESS_SECURE_AUTH_SALT: ${WP_SECURE_AUTH_SALT:?set WP_SECURE_AUTH_SALT in .env}
+      WORDPRESS_LOGGED_IN_SALT: ${WP_LOGGED_IN_SALT:?set WP_LOGGED_IN_SALT in .env}
+      WORDPRESS_NONCE_SALT: ${WP_NONCE_SALT:?set WP_NONCE_SALT in .env}
+
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_HOME', '${SITE_URL:-http://localhost:8080}');
+        define('WP_SITEURL', '${SITE_URL:-http://localhost:8080}');
+
+        if (isset($$_SERVER['HTTP_CF_VISITOR'])
+            && strpos($$_SERVER['HTTP_CF_VISITOR'], '"scheme":"https"') !== false) {
+            $$_SERVER['HTTPS'] = 'on';
+        }
+
+       
+        if (isset($$_SERVER['HTTP_CF_CONNECTING_IP'])) {
+            $$_SERVER['REMOTE_ADDR'] = $$_SERVER['HTTP_CF_CONNECTING_IP'];
+        }
+
+        define('FORCE_SSL_ADMIN', ${FORCE_SSL_ADMIN:-false});
+
+        define('DISALLOW_FILE_EDIT', true);
+    volumes:
+      - ./wp-content/themes/universal-tv-remote:/var/www/html/wp-content/themes/universal-tv-remote
+      - ./wp-content/plugins/advanced-custom-fields:/var/www/html/wp-content/plugins/advanced-custom-fields
+      - ./wp-content/uploads:/var/www/html/wp-content/uploads
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "-o", "/dev/null", "http://localhost/"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  db_data:

@@ -1,0 +1,196 @@
+@import 'tailwindcss';
+
+@source '/Users/teddy/Local Sites/roku/app/public/wp-content/themes/universal-tv-remote/**/*.php';
+
+@theme {
+	/* Dark navy used for hero / footer backgrounds */
+	--color-navy-950: #00132a;
+	--color-navy-900: #001b38;
+	--color-navy-800: #11243c;
+	--color-navy-700: #1c3354;
+	--color-navy-600: #2a4a73;
+
+	/* Bright blue accent (#367FEE) */
+	--color-brand-50: #eef5fe;
+	--color-brand-100: #d8e8fc;
+	--color-brand-200: #b6d3f9;
+	--color-brand-300: #85b5f4;
+	--color-brand-400: #5b9bf2;
+	--color-brand-500: #367fee;
+	--color-brand-600: #2f72db;
+	--color-brand-700: #2860bd;
+	--color-brand-800: #244f99;
+	--color-brand-900: #1f3f78;
+
+	--font-sans:
+		'Google Sans', 'Inter', 'Noto Sans KR', -apple-system, BlinkMacSystemFont,
+		'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif,
+		'Apple Color Emoji', 'Segoe UI Emoji';
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	@apply bg-white text-[#19191A] antialiased;
+	padding-left: env(safe-area-inset-left);
+	padding-right: env(safe-area-inset-right);
+	padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* ---- Animations ---- */
+@keyframes fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(24px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/* Scroll-reveal: hidden until the .is-visible class is added by main.js. */
+.reveal {
+	opacity: 0;
+}
+
+.reveal.is-visible {
+	animation: fade-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* On-mount entrance (e.g. hero) — runs immediately, no observer.
+   Slide only (no opacity ramp): above-the-fold content paints at full opacity
+   on the first frame so it doesn't delay FCP/LCP. */
+@keyframes rise {
+	from {
+		transform: translateY(24px);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+.animate-fade-up {
+	animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+	animation-delay: var(--reveal-delay, 0ms);
+}
+
+/* ---- Marquee ---- */
+@keyframes marquee {
+	from { transform: translateX(0); }
+	to   { transform: translateX(-50%); }
+}
+
+.marquee-track {
+	display: flex;
+	width: max-content;
+	animation: marquee 40s linear infinite;
+}
+
+.marquee-track:hover {
+	animation-play-state: paused;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.marquee-track {
+		animation: none;
+	}
+}
+
+/* Safe area inset for devices with notch / Dynamic Island */
+.safe-top { padding-top: env(safe-area-inset-top); }
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+
+	.reveal,
+	.reveal.is-visible,
+	.animate-fade-up {
+		animation: none !important;
+		opacity: 1 !important;
+		transform: none !important;
+	}
+}
+
+/* ---- Contact Form 7 — plain markup, no Tailwind classes, so it needs its
+   own rules to look consistent with the rest of the form styling. ---- */
+.tvr-cf7 form.wpcf7-form {
+	display: flex;
+	flex-direction: column;
+	gap: 1.25rem;
+	margin-top: 0;
+}
+.tvr-cf7 .wpcf7-form-control-wrap { display: block; }
+.tvr-cf7 label { display: block; font-size: 0.875rem; font-weight: 500; color: #334155; }
+.tvr-cf7 input[type="text"],
+.tvr-cf7 input[type="email"],
+.tvr-cf7 textarea {
+	margin-top: 0.25rem;
+	width: 100%;
+	border-radius: 0.5rem;
+	border: 1px solid #cbd5e1;
+	padding: 0.5rem 0.75rem;
+	outline: none;
+}
+.tvr-cf7 input[type="text"]:focus,
+.tvr-cf7 input[type="email"]:focus,
+.tvr-cf7 textarea:focus {
+	border-color: #5b9bf2;
+	box-shadow: 0 0 0 3px #d8e8fc;
+}
+.tvr-cf7 input[type="submit"] {
+	align-self: flex-start;
+	border-radius: 9999px;
+	background-color: #2f72db;
+	padding: 0.75rem 1.5rem;
+	font-weight: 600;
+	color: #fff;
+	border: none;
+	cursor: pointer;
+	transition: background-color 0.15s ease;
+}
+.tvr-cf7 input[type="submit"]:hover { background-color: #2860bd; }
+.tvr-cf7 .wpcf7-not-valid-tip { color: #e11d48; font-size: 0.8rem; margin-top: 0.25rem; }
+.tvr-cf7 .wpcf7-response-output { border-radius: 0.5rem; padding: 0.75rem 1rem; font-size: 0.875rem; margin-top: 1rem; }
+
+/* ---- Setup Guides step list — ACF WYSIWYG output (plain <ol><li>), not
+   Tailwind-classed markup, so it needs its own rules. ---- */
+.tvr-guide-steps ol { list-style: none; counter-reset: tvr-step; display: flex; flex-direction: column; gap: 1rem; }
+.tvr-guide-steps ol li {
+	counter-increment: tvr-step;
+	position: relative;
+	padding-left: 2.25rem;
+	font-size: 0.875rem;
+	line-height: 1.6;
+	color: #475569;
+}
+.tvr-guide-steps ol li::before {
+	content: counter(tvr-step);
+	position: absolute;
+	left: 0;
+	top: 0.05rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.5rem;
+	height: 1.5rem;
+	border-radius: 9999px;
+	background: #eef5fe;
+	color: #2f72db;
+	font-size: 0.75rem;
+	font-weight: 700;
+}
+.tvr-guide-steps ol li strong { display: block; color: #0f172a; margin-bottom: 0.15rem; }
