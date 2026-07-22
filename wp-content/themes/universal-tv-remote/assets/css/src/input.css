@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@plugin '@tailwindcss/typography';
 
 @source '/Users/teddy/Local Sites/roku/app/public/wp-content/themes/universal-tv-remote/**/*.php';
 
@@ -194,3 +195,49 @@ body {
 	font-weight: 700;
 }
 .tvr-guide-steps ol li strong { display: block; color: #0f172a; margin-bottom: 0.15rem; }
+
+/* ---- Post/Page editor content (the_content() output, wrapped in .prose in
+   page.php/index.php). @tailwindcss/typography covers most of this; these
+   are the specific overrides requested in feedback: headings h1-h5 sized
+   down progressively in brand blue, quote callout style, readable
+   line-height, and h5 (which the plugin doesn't style out of the box). ---- */
+.prose {
+	--tw-prose-headings: #007ce2;
+	--tw-prose-bold: #0f172a;
+	--tw-prose-links: #007ce2;
+	--tw-prose-quotes: #1e3a5f;
+	--tw-prose-quote-borders: #007ce2;
+}
+.prose :where(p, li, td, th):not(:where([class~='not-prose'] *)) {
+	line-height: 1.75;
+}
+.prose h1 { font-size: 2rem; font-weight: 700; }
+.prose h2 { font-size: 1.75rem; font-weight: 700; }
+.prose h3 { font-size: 1.5rem; font-weight: 700; }
+.prose h4 { font-size: 1.25rem; font-weight: 700; }
+.prose h5 {
+	color: var(--tw-prose-headings);
+	font-size: 1.125rem;
+	font-weight: 700;
+	margin-top: 1.6em;
+	margin-bottom: 0.6em;
+	line-height: 1.4;
+}
+.prose blockquote {
+	background-color: #eef5fe;
+	border-left-width: 4px;
+	border-radius: 0.75rem;
+	padding: 1rem 1.5rem;
+	font-style: italic;
+}
+.prose blockquote p:first-of-type::before,
+.prose blockquote p:last-of-type::after {
+	content: '';
+}
+.prose table {
+	overflow: hidden;
+	border-radius: 0.5rem;
+}
+.prose thead {
+	background-color: #f8fafc;
+}

@@ -3,7 +3,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 function tvr_theme_setup() {
 	add_theme_support( 'title-tag' );
-	add_theme_support( 'post-thumbnails', array( 'tv_brand' ) );
+	// 'post'/'page' need this too — without it wp-admin's editor doesn't even
+	// show the "Featured image" panel, not just fail to render one.
+	add_theme_support( 'post-thumbnails', array( 'post', 'page', 'tv_brand' ) );
 	add_theme_support( 'html5', array( 'search-form', 'comment-form', 'comment-list', 'gallery', 'caption' ) );
 	add_theme_support( 'custom-logo' );
 
@@ -17,6 +19,12 @@ function tvr_theme_setup() {
 	add_image_size( 'tv-icon', 64, 64, false );
 }
 add_action( 'after_setup_theme', 'tvr_theme_setup' );
+
+// Pages don't get the post_tag taxonomy by default (only 'post' does) —
+// add it so Pages get the same "Tags" panel as Posts in the editor.
+add_action( 'init', function () {
+	register_taxonomy_for_object_type( 'post_tag', 'page' );
+} );
 
 // Renders the "primary" menu location as a flat row of <a> links (matching
 // SiteHeader.jsx's design, which isn't a <ul> list) if a menu is assigned in

@@ -2,10 +2,16 @@
 <header class="safe-top sticky top-0 z-40 border-b border-slate-200 bg-white/80 backdrop-blur">
 	<div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4">
 		<a href="<?php echo esc_url( home_url( '/' ) ); ?>" class="flex items-center gap-2.5">
-			<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?>" class="h-8 w-8" />
+			<?php if ( has_custom_logo() ) : ?>
+				<span class="h-8 w-8 [&_img]:h-full [&_img]:w-full [&_img]:object-contain">
+					<?php the_custom_logo(); ?>
+				</span>
+			<?php else : ?>
+				<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?>" class="h-8 w-8" />
+			<?php endif; ?>
 			<span class="flex flex-col leading-none">
 				<span class="text-lg font-bold tracking-tight text-slate-900"><?php echo esc_html( TVR_SITE_NAME ); ?></span>
-				<span class="text-[11px] font-medium text-slate-400">1000+ TV brands</span>
+				<span class="text-[11px] font-medium text-slate-400"><?php echo esc_html( get_theme_mod( 'tvr_site_tagline', '1000+ TV brands' ) ); ?></span>
 			</span>
 		</a>
 

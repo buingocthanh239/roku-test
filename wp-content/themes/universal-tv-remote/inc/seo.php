@@ -11,7 +11,29 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 add_filter( 'robots_txt', function ( $output, $public ) {
 	if ( ! $public ) return $output;
-	return "User-agent: *\nAllow: /\n\nSitemap: " . home_url( '/wp-sitemap.xml' ) . "\n";
+
+	$theme_assets = get_template_directory_uri() . '/assets/';
+	$theme_path   = wp_parse_url( $theme_assets, PHP_URL_PATH );
+
+	$lines = array(
+		'User-agent: *',
+		'Disallow: /wp-admin/',
+		'Allow: /wp-admin/admin-ajax.php',
+		'Disallow: /wp-includes/',
+		'Disallow: /wp-content/plugins/',
+		// Theme dir hides PHP templates, but CSS/JS/images (logo, screenshots,
+		// icons — all real content) live under assets/ and must stay
+		// crawlable, or Google can't render the page or index those images.
+		'Disallow: /wp-content/themes/',
+		'Allow: ' . $theme_path,
+		'Disallow: /search/',
+		'Disallow: /?s=',
+		'Disallow: */feed',
+		'Disallow: */?',
+		'',
+		'Sitemap: ' . home_url( '/wp-sitemap.xml' ),
+	);
+	return implode( "\n", $lines ) . "\n";
 }, 10, 2 );
 
 // tv_brand is public + show_in_rest, so core includes it in /wp-sitemap.xml
