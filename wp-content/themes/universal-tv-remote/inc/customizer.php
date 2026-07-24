@@ -107,4 +107,51 @@ add_action( 'customize_register', function ( $wp_customize ) {
 		'section'     => 'tvr_footer',
 		'type'        => 'text',
 	) );
+
+	// ---- Header/Footer Code — raw snippet injection (GTM, tracking pixels,
+	// custom <script>/<style>), no theme file editing required. ----
+	$wp_customize->add_section( 'tvr_header_footer_code', array(
+		'title'       => 'Header/Footer Code',
+		'panel'       => 'tvr_header_footer',
+		'description' => 'Dán code (Google Tag Manager, tracking script, custom <script>/<style>...) — không cần sửa file theme. Chỉ Administrator mới lưu được nguyên trạng; các role khác sẽ bị lọc bớt thẻ không an toàn.',
+	) );
+
+	$wp_customize->add_setting( 'tvr_header_code', array(
+		'default'           => '',
+		'sanitize_callback' => 'tvr_sanitize_raw_code',
+		'capability'        => 'unfiltered_html',
+	) );
+	$wp_customize->add_control( 'tvr_header_code', array(
+		'label'       => 'Header code (chèn ngay trước </head>)',
+		'section'     => 'tvr_header_footer_code',
+		'type'        => 'textarea',
+	) );
+
+	$wp_customize->add_setting( 'tvr_footer_code', array(
+		'default'           => '',
+		'sanitize_callback' => 'tvr_sanitize_raw_code',
+		'capability'        => 'unfiltered_html',
+	) );
+	$wp_customize->add_control( 'tvr_footer_code', array(
+		'label'       => 'Footer code (chèn ngay trước </body>)',
+		'section'     => 'tvr_header_footer_code',
+		'type'        => 'textarea',
+	) );
 } );
+
+// Raw pass-through for users allowed to write unfiltered HTML (Administrators
+// by default) — otherwise strip anything that isn't safe post content, same
+// trust boundary WordPress core uses for the "Additional CSS" field.
+function tvr_sanitize_raw_code( $value ) {
+	return current_user_can( 'unfiltered_html' ) ? $value : wp_kses_post( $value );
+}
+
+add_action( 'wp_head', function () {
+	$code = get_theme_mod( 'tvr_header_code' );
+	if ( $code ) echo "\n" . $code . "\n";
+}, 20 );
+
+add_action( 'wp_footer', function () {
+	$code = get_theme_mod( 'tvr_footer_code' );
+	if ( $code ) echo "\n" . $code . "\n";
+}, 20 );
