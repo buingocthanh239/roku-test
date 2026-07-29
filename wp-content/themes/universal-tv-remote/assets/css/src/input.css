@@ -241,3 +241,45 @@ body {
 .prose thead {
 	background-color: #f8fafc;
 }
+
+/* ---- [tvr_cta] shortcode button — color/outline come from inline style
+   (see inc/cta-button.php), so only the hover state (can't be done inline)
+   lives here. Opacity-based so it works for any color, not just the brand
+   default. ---- */
+.tvr-cta-btn:hover {
+	opacity: 0.85;
+}
+
+/* ---- Blog archive pagination (the_posts_pagination() in index.php) — WP
+   core outputs plain `.page-numbers` links/spans with no styling of its
+   own. ---- */
+.tvr-pagination {
+	display: flex;
+	justify-content: center;
+	gap: 0.5rem;
+	margin-top: 3rem;
+}
+.tvr-pagination .page-numbers {
+	display: inline-flex;
+	min-width: 2.5rem;
+	height: 2.5rem;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	border: 1px solid #e2e8f0;
+	padding: 0 0.75rem;
+	font-size: 0.875rem;
+	font-weight: 500;
+	color: #475569;
+}
+.tvr-pagination .page-numbers.dots {
+	border-color: transparent;
+}
+.tvr-pagination .page-numbers.current {
+	border-color: transparent;
+	background-color: var(--color-brand-500);
+	color: #fff;
+}
+.tvr-pagination a.page-numbers:hover {
+	background-color: #f8fafc;
+}

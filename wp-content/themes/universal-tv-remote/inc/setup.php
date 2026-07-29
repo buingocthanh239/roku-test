@@ -26,20 +26,16 @@ add_action( 'init', function () {
 	register_taxonomy_for_object_type( 'post_tag', 'page' );
 } );
 
-// Renders the "primary" menu location as a flat row of <a> links (matching
-// SiteHeader.jsx's design, which isn't a <ul> list) if a menu is assigned in
-// Appearance → Menus, otherwise falls back to the original hardcoded nav —
-// so the header works correctly with zero admin configuration.
-function tvr_primary_nav() {
-	$items = array();
-	$menu  = has_nav_menu( 'primary' ) ? wp_get_nav_menu_items( wp_get_nav_menu_object( get_nav_menu_locations()['primary'] ) ) : null;
+// Single source of truth for the "primary" menu location's items — pulls
+// from Appearance → Menus if a menu is assigned there, otherwise falls back
+// to the original hardcoded nav. Both tvr_primary_nav() (desktop) and
+// tvr_primary_nav_mobile() render this same list so the two can't drift out
+// of sync with each other again.
+function tvr_nav_items() {
+	$menu = has_nav_menu( 'primary' ) ? wp_get_nav_menu_items( wp_get_nav_menu_object( get_nav_menu_locations()['primary'] ) ) : null;
 
-	if ( $menu ) {
-		foreach ( $menu as $item ) {
-			$items[] = array( 'url' => $item->url, 'label' => $item->title );
-		}
-	} else {
-		$items = array(
+	if ( ! $menu ) {
+		return array(
 			array( 'url' => home_url( '/services/' ), 'label' => 'Supported TVs' ),
 			array( 'url' => home_url( '/troubleshooting/' ), 'label' => 'Troubleshooting' ),
 			array( 'url' => home_url( '/help/' ), 'label' => 'Help' ),
@@ -47,12 +43,36 @@ function tvr_primary_nav() {
 		);
 	}
 
-	foreach ( $items as $item ) {
+	$items = array();
+	foreach ( $menu as $item ) {
+		$items[] = array( 'url' => $item->url, 'label' => $item->title );
+	}
+	return $items;
+}
+
+// Renders tvr_nav_items() as a flat row of <a> links (matching SiteHeader.jsx's
+// design, which isn't a <ul> list) for the desktop header.
+function tvr_primary_nav() {
+	foreach ( tvr_nav_items() as $item ) {
 		$active = tvr_is_active_url( $item['url'] );
 		printf(
 			'<a href="%1$s" class="text-sm font-medium transition-colors %2$s">%3$s</a>',
 			esc_url( $item['url'] ),
 			$active ? 'text-brand-500' : 'text-slate-600 hover:text-slate-900',
+			esc_html( $item['label'] )
+		);
+	}
+}
+
+// Same tvr_nav_items() list, styled as stacked full-width rows for the
+// mobile slide-down drawer.
+function tvr_primary_nav_mobile() {
+	foreach ( tvr_nav_items() as $item ) {
+		$active = tvr_is_active_url( $item['url'] );
+		printf(
+			'<a href="%1$s" class="rounded-lg px-3 py-3 text-sm font-medium %2$s">%3$s</a>',
+			esc_url( $item['url'] ),
+			$active ? 'bg-slate-50 text-brand-500' : 'text-slate-700 hover:bg-slate-100',
 			esc_html( $item['label'] )
 		);
 	}

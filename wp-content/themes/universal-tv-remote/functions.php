@@ -7,6 +7,8 @@ require get_template_directory() . '/inc/cpt-tv-brand.php';
 require get_template_directory() . '/inc/content-cpts.php';
 require get_template_directory() . '/inc/acf-fields.php';
 require get_template_directory() . '/inc/admin.php';
+require get_template_directory() . '/inc/cta-button.php';
+require get_template_directory() . '/inc/live-preview.php';
 require get_template_directory() . '/inc/template-tags.php';
 require get_template_directory() . '/inc/schema.php';
 require get_template_directory() . '/inc/seo.php';

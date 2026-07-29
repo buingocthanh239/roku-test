@@ -17,7 +17,7 @@ $intro      = tvr_field( 'intro', $page_id, 'Spotted an outdated guide or a miss
 ?>
 
 <div class="mx-auto max-w-2xl px-4 py-16">
-	<h1 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"><?php echo esc_html( $heading ); ?></h1>
+	<h1 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"<?php echo tvr_heading_style_attr( $page_id ); ?>><?php echo esc_html( $heading ); ?></h1>
 	<p class="mt-2 text-slate-600"><?php echo esc_html( $intro ); ?></p>
 
 	<?php if ( $cf7_active && $cf7_id ) : ?>

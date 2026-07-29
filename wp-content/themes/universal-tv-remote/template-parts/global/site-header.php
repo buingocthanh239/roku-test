@@ -32,10 +32,10 @@
 
 	<div id="tvr-mobile-nav" class="hidden border-t border-slate-200 bg-white md:hidden">
 		<nav class="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-3">
-			<a href="<?php echo esc_url( home_url( '/services/' ) ); ?>" class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Supported TVs</a>
-			<a href="<?php echo esc_url( home_url( '/troubleshooting/' ) ); ?>" class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Troubleshooting</a>
-			<a href="<?php echo esc_url( home_url( '/help/' ) ); ?>" class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Help</a>
-			<a href="<?php echo esc_url( home_url( '/contact/' ) ); ?>" class="rounded-lg px-3 py-3 text-sm font-medium text-slate-700 hover:bg-slate-100">Contact</a>
+			<?php tvr_primary_nav_mobile(); ?>
+			<a href="<?php echo esc_url( home_url( '/services/' ) ); ?>" class="mt-2 rounded-full bg-brand-500 px-4 py-3 text-center text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600">
+				Browse Supported TVs
+			</a>
 		</nav>
 	</div>
 </header>

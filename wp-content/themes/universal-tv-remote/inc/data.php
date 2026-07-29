@@ -24,6 +24,17 @@ function tvr_app_links() {
 	);
 }
 
+// Home page's App Store / Mac App Store badges go through these begamob.com
+// landing pages instead of tvr_app_links()'s direct Apple links, so the
+// hero-banner click is attributed in analytics before it forwards to the App
+// Store (per 29/7 feedback doc — "utm tracking trên trang chủ").
+function tvr_home_app_links() {
+	return array(
+		'ios' => 'https://remotetv.begamob.com/dowload-appstore/?utm_source=home&utm_medium=hero_banner&utm_campaign=SEO',
+		'mac' => 'https://remotetv.begamob.com/dowload-mac-app-store/?utm_source=home&utm_medium=hero_banner&utm_campaign=SEO',
+	);
+}
+
 // Category key => display label. Mirrors scripts/build-data.mjs's hardcoded map.
 function tvr_category_label_map() {
 	return array(

@@ -12,6 +12,16 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 if ( ! function_exists( 'acf_add_local_field_group' ) ) return;
 
+// Self-serve H1 color/size override (see tvr_heading_style_attr() in
+// template-tags.php) — same two fields on every group below, just a
+// different ACF field key prefix per location so they don't collide.
+function tvr_heading_style_fields( $key_prefix, $label = 'Heading' ) {
+	return array(
+		array( 'key' => "field_{$key_prefix}_heading_color", 'label' => "$label color", 'name' => 'heading_color', 'type' => 'color_picker', 'instructions' => 'Để trống để dùng màu mặc định.' ),
+		array( 'key' => "field_{$key_prefix}_heading_size", 'label' => "$label size", 'name' => 'heading_size', 'type' => 'select', 'choices' => array( '' => 'Mặc định', 'lg' => 'Lớn hơn', 'xl' => 'Rất lớn' ), 'default_value' => '' ),
+	);
+}
+
 add_action( 'acf/init', function () {
 
 	$icon_choices = array(
@@ -125,13 +135,24 @@ add_action( 'acf/init', function () {
 		'location' => array( array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'guide' ) ) ),
 	) );
 
+	// ---- Post heading style — lets a content writer change one article's H1
+	// size/color from wp-admin without a code push. Rendered as inline style
+	// in index.php (overrides the default Tailwind classes via specificity),
+	// so it works regardless of what's already compiled into style.css. ----
+	acf_add_local_field_group( array(
+		'key'      => 'group_post_heading_style',
+		'title'    => 'Heading Style',
+		'fields'   => tvr_heading_style_fields( 'post' ),
+		'location' => array( array( array( 'param' => 'post_type', 'operator' => '==', 'value' => 'post' ) ) ),
+	) );
+
 	// ---- Home page (front-page.php) ----
 	$home_page_id = (string) get_option( 'tvr_home_page_id' );
 	if ( $home_page_id ) {
 		acf_add_local_field_group( array(
 			'key'      => 'group_home_page',
 			'title'    => 'Home Page Content',
-			'fields'   => array(
+			'fields'   => array_merge( tvr_heading_style_fields( 'home', 'Hero title' ), array(
 				array( 'key' => 'field_home_hero_title', 'label' => 'Hero title', 'name' => 'hero_title', 'type' => 'text' ),
 				array( 'key' => 'field_home_hero_subtitle', 'label' => 'Hero subtitle', 'name' => 'hero_subtitle', 'type' => 'textarea', 'rows' => 2 ),
 				array( 'key' => 'field_home_stars_caption', 'label' => 'Stars caption', 'name' => 'stars_caption', 'type' => 'text' ),
@@ -147,7 +168,7 @@ add_action( 'acf/init', function () {
 				array( 'key' => 'field_home_compare_c2_name', 'label' => 'Competitor 2 name', 'name' => 'compare_competitor_2_name', 'type' => 'text' ),
 				array( 'key' => 'field_home_cta_heading', 'label' => 'Bottom CTA heading', 'name' => 'cta_heading', 'type' => 'text' ),
 				array( 'key' => 'field_home_cta_subheading', 'label' => 'Bottom CTA subheading', 'name' => 'cta_subheading', 'type' => 'textarea', 'rows' => 2 ),
-			),
+			) ),
 			'location' => array( array( array( 'param' => 'page', 'operator' => '==', 'value' => $home_page_id ) ) ),
 		) );
 	}
@@ -156,10 +177,10 @@ add_action( 'acf/init', function () {
 	acf_add_local_field_group( array(
 		'key'      => 'group_help_page',
 		'title'    => 'Help Page Content',
-		'fields'   => array(
+		'fields'   => array_merge( tvr_heading_style_fields( 'help', 'Hero title' ), array(
 			array( 'key' => 'field_help_title', 'label' => 'Hero title', 'name' => 'hero_title', 'type' => 'text' ),
 			array( 'key' => 'field_help_subtitle', 'label' => 'Hero subtitle', 'name' => 'hero_subtitle', 'type' => 'textarea', 'rows' => 2 ),
-		),
+		) ),
 		'location' => array( array( array( 'param' => 'page_template', 'operator' => '==', 'value' => 'page-templates/template-help.php' ) ) ),
 	) );
 
@@ -167,10 +188,10 @@ add_action( 'acf/init', function () {
 	acf_add_local_field_group( array(
 		'key'      => 'group_contact_page',
 		'title'    => 'Contact Page Content',
-		'fields'   => array(
+		'fields'   => array_merge( tvr_heading_style_fields( 'contact' ), array(
 			array( 'key' => 'field_contact_heading', 'label' => 'Heading', 'name' => 'heading', 'type' => 'text' ),
 			array( 'key' => 'field_contact_intro', 'label' => 'Intro text', 'name' => 'intro', 'type' => 'textarea', 'rows' => 2 ),
-		),
+		) ),
 		'location' => array( array( array( 'param' => 'page_template', 'operator' => '==', 'value' => 'page-templates/template-contact.php' ) ) ),
 	) );
 
@@ -178,7 +199,7 @@ add_action( 'acf/init', function () {
 	acf_add_local_field_group( array(
 		'key'      => 'group_troubleshooting_page',
 		'title'    => 'Troubleshooting Page Content',
-		'fields'   => array(
+		'fields'   => array_merge( tvr_heading_style_fields( 'ts' ), array(
 			array( 'key' => 'field_ts_heading', 'label' => 'Heading', 'name' => 'heading', 'type' => 'text' ),
 			array( 'key' => 'field_ts_subheading', 'label' => 'Subheading', 'name' => 'subheading', 'type' => 'textarea', 'rows' => 2 ),
 			array( 'key' => 'field_ts_qf_heading', 'label' => 'Quick Fixes heading', 'name' => 'quick_fixes_heading', 'type' => 'text' ),
@@ -189,7 +210,7 @@ add_action( 'acf/init', function () {
 			array( 'key' => 'field_ts_adv_subheading', 'label' => 'Advanced subheading', 'name' => 'advanced_subheading', 'type' => 'text' ),
 			array( 'key' => 'field_ts_cta_heading', 'label' => 'Support CTA heading', 'name' => 'support_cta_heading', 'type' => 'text' ),
 			array( 'key' => 'field_ts_cta_text', 'label' => 'Support CTA text', 'name' => 'support_cta_text', 'type' => 'text' ),
-		),
+		) ),
 		'location' => array( array( array( 'param' => 'page_template', 'operator' => '==', 'value' => 'page-templates/template-troubleshooting.php' ) ) ),
 	) );
 
@@ -197,14 +218,14 @@ add_action( 'acf/init', function () {
 	acf_add_local_field_group( array(
 		'key'      => 'group_download_page',
 		'title'    => 'Download App Page Content',
-		'fields'   => array(
+		'fields'   => array_merge( tvr_heading_style_fields( 'da', 'Hero title' ), array(
 			array( 'key' => 'field_da_hero_title', 'label' => 'Hero title', 'name' => 'hero_title', 'type' => 'text' ),
 			array( 'key' => 'field_da_hero_subtitle', 'label' => 'Hero subtitle', 'name' => 'hero_subtitle', 'type' => 'textarea', 'rows' => 2 ),
 			array( 'key' => 'field_da_reasons_heading', 'label' => 'Reasons heading', 'name' => 'reasons_heading', 'type' => 'text' ),
 			array( 'key' => 'field_da_reasons_subheading', 'label' => 'Reasons subheading', 'name' => 'reasons_subheading', 'type' => 'text' ),
 			array( 'key' => 'field_da_cta_heading', 'label' => 'Bottom CTA heading', 'name' => 'cta_heading', 'type' => 'text' ),
 			array( 'key' => 'field_da_cta_subheading', 'label' => 'Bottom CTA subheading', 'name' => 'cta_subheading', 'type' => 'textarea', 'rows' => 2 ),
-		),
+		) ),
 		'location' => array( array( array( 'param' => 'page_template', 'operator' => '==', 'value' => 'page-templates/template-download-app.php' ) ) ),
 	) );
 
@@ -212,10 +233,10 @@ add_action( 'acf/init', function () {
 	acf_add_local_field_group( array(
 		'key'      => 'group_guides_page',
 		'title'    => 'Guides Page Content',
-		'fields'   => array(
+		'fields'   => array_merge( tvr_heading_style_fields( 'guides' ), array(
 			array( 'key' => 'field_guides_heading', 'label' => 'Heading', 'name' => 'heading', 'type' => 'text' ),
 			array( 'key' => 'field_guides_subheading', 'label' => 'Subheading', 'name' => 'subheading', 'type' => 'textarea', 'rows' => 2 ),
-		),
+		) ),
 		'location' => array( array( array( 'param' => 'page_template', 'operator' => '==', 'value' => 'page-templates/template-guides.php' ) ) ),
 	) );
 

@@ -24,7 +24,7 @@ tvr_json_ld( tvr_faq_ld( $qa_pairs ) );
 
 <section class="bg-navy-900 text-white">
 	<div class="mx-auto max-w-3xl px-4 py-16 text-center">
-		<h1 class="text-3xl font-extrabold tracking-tight sm:text-5xl"><?php echo esc_html( $hero_title ); ?></h1>
+		<h1 class="text-3xl font-extrabold tracking-tight sm:text-5xl"<?php echo tvr_heading_style_attr( $page_id ); ?>><?php echo esc_html( $hero_title ); ?></h1>
 		<p class="mx-auto mt-3 max-w-xl text-slate-300"><?php echo esc_html( $hero_subtitle ); ?></p>
 		<div class="relative mx-auto mt-8 max-w-xl">
 			<svg class="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

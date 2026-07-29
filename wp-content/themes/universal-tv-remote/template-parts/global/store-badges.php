@@ -1,9 +1,11 @@
 <?php
 if ( ! defined( 'ABSPATH' ) ) exit;
-$qr     = $args['qr'] ?? true;
-$center = $args['center'] ?? true;
-$light  = $args['light'] ?? false;
-$links  = tvr_app_links();
+$qr      = $args['qr'] ?? true;
+$center  = $args['center'] ?? true;
+$light   = $args['light'] ?? false;
+$links   = tvr_app_links();
+$ios_url = $args['ios_url'] ?? $links['ios'];
+$mac_url = $args['mac_url'] ?? $links['mac'];
 ?>
 <div class="flex items-center gap-5 <?php echo $center ? 'justify-center' : ''; ?>">
 	<?php if ( $qr ) : ?>
@@ -12,10 +14,10 @@ $links  = tvr_app_links();
 		</div>
 	<?php endif; ?>
 	<div class="flex flex-col gap-2">
-		<a href="<?php echo esc_url( $links['ios'] ); ?>" target="_blank" rel="noopener noreferrer">
+		<a href="<?php echo esc_url( $ios_url ); ?>" target="_blank" rel="noopener noreferrer">
 			<img src="<?php echo esc_url( tvr_asset( 'appStore.svg' ) ); ?>" alt="Download on the App Store" class="h-10 w-auto sm:h-[52px]" />
 		</a>
-		<a href="<?php echo esc_url( $links['mac'] ); ?>" target="_blank" rel="noopener noreferrer">
+		<a href="<?php echo esc_url( $mac_url ); ?>" target="_blank" rel="noopener noreferrer">
 			<img src="<?php echo esc_url( tvr_asset( 'macAppStore.svg' ) ); ?>" alt="Download on the Mac App Store" class="h-10 w-auto sm:h-[52px]" />
 		</a>
 		<?php if ( $qr ) : ?>

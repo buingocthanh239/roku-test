@@ -40,6 +40,29 @@ function tvr_field( $selector, $post_id, $fallback = '' ) {
 	return ( $value === null || $value === false || $value === '' ) ? $fallback : $value;
 }
 
+// CSS declarations (no wrapping style="") for a page/post's H1, driven by its
+// "heading_color" (color_picker) + "heading_size" (select) ACF fields —
+// inline style always wins over the Tailwind utility classes on the tag by
+// CSS specificity, so this works regardless of what's already compiled into
+// style.css. Returned as bare declarations so a caller that already has its
+// own style="" (e.g. front-page.php's --reveal-delay) can append it inline.
+function tvr_heading_style_css( $post_id = false ) {
+	$color    = get_field( 'heading_color', $post_id );
+	$size     = get_field( 'heading_size', $post_id );
+	$size_map = array( 'lg' => '2rem', 'xl' => '2.5rem' );
+	$style    = '';
+	if ( $color ) $style .= 'color:' . $color . ';';
+	if ( isset( $size_map[ $size ] ) ) $style .= 'font-size:' . $size_map[ $size ] . ';';
+	return $style;
+}
+
+// Full style="" attribute (including the leading space) for a callsite with
+// no other inline styles to merge — see tvr_heading_style_css() above.
+function tvr_heading_style_attr( $post_id = false ) {
+	$style = tvr_heading_style_css( $post_id );
+	return $style ? ' style="' . esc_attr( $style ) . '"' : '';
+}
+
 function tvr_stars_svg( $class = '' ) {
 	$star  = '<svg class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10 1.5l2.6 5.3 5.9.9-4.3 4.1 1 5.8L10 15l-5.2 2.6 1-5.8L1.5 7.7l5.9-.9L10 1.5z" /></svg>';
 	return '<div class="flex gap-0.5 text-amber-400 ' . esc_attr( $class ) . '">' . str_repeat( $star, 5 ) . '</div>';

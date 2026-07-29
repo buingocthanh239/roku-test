@@ -11,6 +11,34 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 add_action( 'customize_register', function ( $wp_customize ) {
+	// ---- Brand Colors — single source of truth for the theme's blue/navy
+	// palette. Tailwind v4 already compiles every bg-brand-*/text-brand-*/
+	// bg-navy-* utility to `var(--color-brand-500)` etc. (see assets/css/src/
+	// input.css @theme block), so overriding those CSS custom properties in
+	// wp_head re-colors every utility class site-wide with no CSS rebuild. ----
+	$wp_customize->add_section( 'tvr_brand_colors', array(
+		'title'    => 'Brand Colors',
+		'priority' => 20,
+	) );
+
+	$wp_customize->add_setting( 'tvr_brand_color', array(
+		'default'           => '#367fee',
+		'sanitize_callback' => 'sanitize_hex_color',
+	) );
+	$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'tvr_brand_color', array(
+		'label'   => 'Brand color (buttons, links, accents)',
+		'section' => 'tvr_brand_colors',
+	) ) );
+
+	$wp_customize->add_setting( 'tvr_navy_color', array(
+		'default'           => '#001b38',
+		'sanitize_callback' => 'sanitize_hex_color',
+	) );
+	$wp_customize->add_control( new WP_Customize_Color_Control( $wp_customize, 'tvr_navy_color', array(
+		'label'   => 'Dark navy color (hero/footer backgrounds, dark headings)',
+		'section' => 'tvr_brand_colors',
+	) ) );
+
 	$wp_customize->add_panel( 'tvr_header_footer', array(
 		'title'    => 'Header & Footer',
 		'priority' => 25,
@@ -145,6 +173,31 @@ add_action( 'customize_register', function ( $wp_customize ) {
 function tvr_sanitize_raw_code( $value ) {
 	return current_user_can( 'unfiltered_html' ) ? $value : wp_kses_post( $value );
 }
+
+// Re-declares the brand/navy CSS custom properties Tailwind's compiled
+// output reads at paint time. Lighter/darker shades are derived from the
+// single picked color with color-mix() instead of asking for 7 separate
+// swatches — outside Tailwind's `@layer theme`, so it wins regardless of
+// where it lands in <head> relative to style.css (unlayered always beats
+// layered in the CSS cascade).
+add_action( 'wp_head', function () {
+	$brand = get_theme_mod( 'tvr_brand_color', '#367fee' );
+	$navy  = get_theme_mod( 'tvr_navy_color', '#001b38' );
+	?>
+	<style id="tvr-brand-colors">
+		:root {
+			--color-brand-500: <?php echo esc_html( $brand ); ?>;
+			--color-brand-50:  color-mix(in srgb, <?php echo esc_html( $brand ); ?> 12%, white);
+			--color-brand-100: color-mix(in srgb, <?php echo esc_html( $brand ); ?> 22%, white);
+			--color-brand-300: color-mix(in srgb, <?php echo esc_html( $brand ); ?> 55%, white);
+			--color-brand-400: color-mix(in srgb, <?php echo esc_html( $brand ); ?> 78%, white);
+			--color-brand-600: color-mix(in srgb, <?php echo esc_html( $brand ); ?> 90%, black);
+			--color-brand-700: color-mix(in srgb, <?php echo esc_html( $brand ); ?> 78%, black);
+			--color-navy-900: <?php echo esc_html( $navy ); ?>;
+		}
+	</style>
+	<?php
+}, 5 );
 
 add_action( 'wp_head', function () {
 	$code = get_theme_mod( 'tvr_header_code' );

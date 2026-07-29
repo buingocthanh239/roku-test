@@ -26,18 +26,20 @@ $features = tvr_get_content_posts( 'home_feature' );
 $reviews  = tvr_get_content_posts( 'home_review' );
 $compare  = tvr_get_content_posts( 'compare_row' );
 
+$home_links = tvr_home_app_links();
+
 tvr_json_ld( tvr_software_application_ld() );
 ?>
 
 <section class="bg-white">
 	<div class="mx-auto max-w-5xl px-4 pt-14 pb-6 text-center sm:pt-20">
 		<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="Universal TV Remote logo" class="animate-fade-up mx-auto mb-5 h-20 w-20" />
-		<h1 class="animate-fade-up text-4xl font-extrabold tracking-tight text-navy-900 sm:text-6xl" style="--reveal-delay:80ms"><?php echo esc_html( $hero_title ); ?></h1>
+		<h1 class="animate-fade-up text-4xl font-extrabold tracking-tight text-navy-900 sm:text-6xl" style="--reveal-delay:80ms;<?php echo esc_attr( tvr_heading_style_css( $home_id ) ); ?>"><?php echo esc_html( $hero_title ); ?></h1>
 		<p class="animate-fade-up mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 sm:text-xl" style="--reveal-delay:160ms">
 			<?php echo esc_html( $hero_subtitle ); ?>
 		</p>
 		<div class="animate-fade-up mt-9 flex justify-center" style="--reveal-delay:240ms">
-			<?php get_template_part( 'template-parts/global/store-badges', null, array( 'light' => true ) ); ?>
+			<?php get_template_part( 'template-parts/global/store-badges', null, array( 'light' => true, 'ios_url' => $home_links['ios'], 'mac_url' => $home_links['mac'] ) ); ?>
 		</div>
 		<div class="animate-fade-up mt-8 flex flex-col items-center" style="--reveal-delay:320ms">
 			<?php echo tvr_stars_svg( '[&_svg]:h-8 [&_svg]:w-8' ); ?>
@@ -154,7 +156,7 @@ tvr_json_ld( tvr_software_application_ld() );
 				<p class="mt-3 max-w-sm font-light text-slate-300"><?php echo esc_html( $cta_subheading ); ?></p>
 			</div>
 			<div class="flex-shrink-0">
-				<?php get_template_part( 'template-parts/global/store-badges', null, array( 'qr' => true, 'center' => true ) ); ?>
+				<?php get_template_part( 'template-parts/global/store-badges', null, array( 'qr' => true, 'center' => true, 'ios_url' => $home_links['ios'], 'mac_url' => $home_links['mac'] ) ); ?>
 			</div>
 		</div>
 	</div>

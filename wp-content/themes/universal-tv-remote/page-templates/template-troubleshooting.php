@@ -40,7 +40,7 @@ tvr_json_ld( tvr_faq_ld( $faq_pairs ) );
 <div class="mx-auto max-w-3xl px-4 py-12">
 
 	<div class="mb-10">
-		<h1 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"><?php echo esc_html( $heading ); ?></h1>
+		<h1 class="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl"<?php echo tvr_heading_style_attr( $page_id ); ?>><?php echo esc_html( $heading ); ?></h1>
 		<p class="mt-3 text-slate-500"><?php echo esc_html( $subheading ); ?></p>
 	</div>
 
