@@ -211,7 +211,7 @@ body {
 .prose :where(p, li, td, th):not(:where([class~='not-prose'] *)) {
 	line-height: 1.75;
 }
-.prose h1 { font-size: 2rem; font-weight: 700; }
+.prose h1 { font-size: 2rem; font-weight: 700; color: #3D7DE3; }
 .prose h2 { font-size: 1.75rem; font-weight: 700; }
 .prose h3 { font-size: 1.5rem; font-weight: 700; }
 .prose h4 { font-size: 1.25rem; font-weight: 700; }

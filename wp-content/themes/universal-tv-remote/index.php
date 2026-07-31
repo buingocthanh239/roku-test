@@ -12,9 +12,8 @@ $posts_page_id = (int) get_option( 'page_for_posts' );
 $archive_title = is_search()
 	? sprintf( 'Search results for "%s"', get_search_query() )
 	: ( $posts_page_id ? get_the_title( $posts_page_id ) : 'Blog' );
-$post_index = 0;
 ?>
-<div class="mx-auto max-w-3xl px-4 py-16">
+<div class="mx-auto max-w-6xl px-4 py-16 lg:max-w-318">
 	<div class="mb-10 text-center">
 		<h1 class="text-3xl font-extrabold tracking-tight text-navy-900 sm:text-4xl"><?php echo esc_html( $archive_title ); ?></h1>
 		<?php if ( ! is_search() ) : ?>
@@ -23,38 +22,75 @@ $post_index = 0;
 	</div>
 
 	<?php if ( have_posts() ) : ?>
-		<div class="flex flex-col gap-6">
-			<?php while ( have_posts() ) : the_post();
-				$is_featured = ! is_search() && ! is_paged() && $post_index === 0;
-				$categories  = get_the_category();
-			?>
-				<article class="reveal group overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg <?php echo $is_featured ? 'flex flex-col' : 'flex flex-col sm:flex-row sm:items-stretch'; ?>">
-					<a href="<?php the_permalink(); ?>" class="block shrink-0 overflow-hidden bg-slate-100 <?php echo $is_featured ? 'aspect-[16/9] w-full' : 'aspect-[16/9] w-full sm:aspect-auto sm:h-auto sm:w-56'; ?>">
+		<?php
+		// First post on the unpaged/non-search view gets a wide horizontal
+		// "Featured" banner (image left, info right) above the regular grid.
+		$show_featured = ! is_search() && ! is_paged();
+		$grid_open     = false;
+		$i             = 0;
+		?>
+		<?php while ( have_posts() ) : the_post();
+			$categories = get_the_category();
+		?>
+			<?php if ( $show_featured && 0 === $i ) : ?>
+				<article class="reveal group mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:flex sm:items-stretch">
+					<a href="<?php the_permalink(); ?>" class="block aspect-video w-full shrink-0 overflow-hidden bg-slate-100 sm:aspect-auto sm:w-1/2">
 						<?php if ( has_post_thumbnail() ) : ?>
 							<?php the_post_thumbnail( 'large', array( 'class' => 'h-full w-full object-cover transition duration-300 group-hover:scale-105' ) ); ?>
 						<?php else : ?>
 							<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="" class="h-full w-full object-contain p-10 opacity-30" />
 						<?php endif; ?>
 					</a>
-					<div class="flex flex-1 flex-col justify-center p-5 sm:p-6">
+					<div class="flex flex-1 flex-col justify-center p-6 sm:p-8">
 						<div class="flex items-center gap-2 text-xs font-medium">
-							<?php if ( $is_featured ) : ?>
-								<span class="rounded-full bg-brand-50 px-2.5 py-1 text-brand-600">Featured</span>
-							<?php endif; ?>
+							<span class="rounded-full bg-brand-50 px-2.5 py-1 text-brand-600">Featured</span>
 							<?php if ( $categories ) : ?>
-								<span class="text-brand-600"><?php echo esc_html( $categories[0]->name ); ?></span>
-								<span class="text-slate-300">&middot;</span>
+								<span class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide <?php echo esc_attr( tvr_category_badge_color( $categories[0]->name ) ); ?>"><?php echo esc_html( $categories[0]->name ); ?></span>
 							<?php endif; ?>
-							<span class="text-slate-400"><?php echo esc_html( get_the_date() ); ?></span>
 						</div>
-						<h2 class="<?php echo $is_featured ? 'mt-3 text-2xl' : 'mt-2 text-lg'; ?> font-semibold text-navy-900">
+						<h2 class="mt-3 text-2xl font-semibold leading-snug text-navy-900">
 							<a href="<?php the_permalink(); ?>" class="hover:text-brand-600"><?php the_title(); ?></a>
 						</h2>
-						<p class="mt-2 text-sm leading-relaxed text-slate-600 <?php echo $is_featured ? 'line-clamp-3' : 'line-clamp-2'; ?>"><?php echo esc_html( wp_strip_all_tags( get_the_excerpt() ) ); ?></p>
+						<p class="mt-2 text-sm leading-relaxed text-slate-600 line-clamp-3"><?php echo esc_html( wp_strip_all_tags( get_the_excerpt() ) ); ?></p>
+						<div class="mt-4 flex items-center gap-1.5 text-xs text-slate-400">
+							<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7.25" /><path stroke-linecap="round" d="M10 6v4l2.5 1.5" /></svg>
+							<span><?php echo (int) tvr_reading_time( get_the_ID() ); ?> min</span>
+							<span>&middot;</span>
+							<span><?php echo esc_html( get_the_date( 'M j' ) ); ?></span>
+						</div>
 					</div>
 				</article>
-			<?php $post_index++; endwhile; ?>
-		</div>
+			<?php else : ?>
+				<?php if ( ! $grid_open ) : $grid_open = true; ?>
+				<div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+				<?php endif; ?>
+				<article class="reveal group overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg">
+					<a href="<?php the_permalink(); ?>" class="block aspect-video w-full overflow-hidden bg-slate-100">
+						<?php if ( has_post_thumbnail() ) : ?>
+							<?php the_post_thumbnail( 'large', array( 'class' => 'h-full w-full object-cover transition duration-300 group-hover:scale-105' ) ); ?>
+						<?php else : ?>
+							<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="" class="h-full w-full object-contain p-10 opacity-30" />
+						<?php endif; ?>
+					</a>
+					<div class="p-5">
+						<?php if ( $categories ) : ?>
+							<span class="inline-block rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide <?php echo esc_attr( tvr_category_badge_color( $categories[0]->name ) ); ?>"><?php echo esc_html( $categories[0]->name ); ?></span>
+						<?php endif; ?>
+						<h2 class="mt-3 text-lg font-semibold leading-snug text-navy-900 line-clamp-2">
+							<a href="<?php the_permalink(); ?>" class="hover:text-brand-600"><?php the_title(); ?></a>
+						</h2>
+						<div class="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
+							<svg class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="10" cy="10" r="7.25" /><path stroke-linecap="round" d="M10 6v4l2.5 1.5" /></svg>
+							<span><?php echo (int) tvr_reading_time( get_the_ID() ); ?> min</span>
+							<span>&middot;</span>
+							<span><?php echo esc_html( get_the_date( 'M j' ) ); ?></span>
+						</div>
+					</div>
+				</article>
+			<?php endif; $i++; endwhile; ?>
+		<?php if ( $grid_open ) : ?>
+			</div>
+		<?php endif; ?>
 
 		<?php
 		the_posts_pagination( array(

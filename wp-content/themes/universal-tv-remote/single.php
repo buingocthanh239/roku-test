@@ -24,10 +24,10 @@ $blog_url = home_url( '/blog/' );
 			<span><?php echo esc_html( get_the_date() ); ?></span>
 		</div>
 
-		<h1 class="mt-2 text-4xl font-extrabold tracking-tight text-navy-900 sm:text-5xl"><?php the_title(); ?></h1>
+		<h1 class="mt-2 text-4xl font-extrabold tracking-tight text-[#3D7DE3] sm:text-5xl"<?php echo tvr_heading_style_attr(); ?>><?php the_title(); ?></h1>
 
 		<?php if ( has_post_thumbnail() ) : ?>
-			<div class="mt-8 overflow-hidden rounded-2xl"><?php the_post_thumbnail( 'large', array( 'class' => 'w-full h-auto object-cover' ) ); ?></div>
+			<div class="mt-8 aspect-video w-full overflow-hidden rounded-2xl bg-slate-100"><?php the_post_thumbnail( 'large', array( 'class' => 'h-full w-full object-cover' ) ); ?></div>
 		<?php endif; ?>
 
 		<div class="prose mt-8 max-w-none text-slate-600"><?php the_content(); ?></div>

@@ -129,6 +129,24 @@ function tvr_service_icon_html( $post_id, $name, $size = 40, $class = '' ) {
 	return tvr_letter_avatar_html( $name, $size, $class );
 }
 
+// ---- Blog archive card helpers (index.php) ----
+
+// ~200 wpm estimate, same rounding convention readers expect ("6 min").
+function tvr_reading_time( $post_id ) {
+	$words = str_word_count( wp_strip_all_tags( get_post_field( 'post_content', $post_id ) ) );
+	return max( 1, (int) ceil( $words / 200 ) );
+}
+
+// Deterministic color per category name (same palette + seeding as
+// tvr_letter_avatar_html(), just keyed off the category name instead of a
+// person's name) so a category always gets the same badge color without an
+// admin field to maintain.
+function tvr_category_badge_color( $name ) {
+	$colors = tvr_avatar_colors();
+	$seed   = ord( substr( $name, 0, 1 ) ) % count( $colors );
+	return $colors[ $seed ];
+}
+
 // ---- Categories (replaces the build-time categories.json tally) ----
 
 function tvr_all_categories() {
