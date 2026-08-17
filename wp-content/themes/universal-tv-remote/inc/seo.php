@@ -122,6 +122,9 @@ function tvr_current_page_seo() {
 }
 
 add_filter( 'pre_get_document_title', function ( $title ) {
+	// Rank Math (inc/seo-rank-math.php) owns title/meta/canonical/OG for
+	// single blog posts — don't compete with it here.
+	if ( is_singular( 'post' ) ) return $title;
 	if ( is_404() ) return 'Page not found — ' . TVR_SITE_NAME;
 	$seo = tvr_current_page_seo();
 	return is_front_page() ? $seo['title'] : $seo['title'] . ' — ' . TVR_SITE_NAME;
@@ -129,6 +132,15 @@ add_filter( 'pre_get_document_title', function ( $title ) {
 
 add_action( 'wp_head', function () {
 	if ( is_404() ) return;
+
+	// Site-wide Organization/WebSite JSON-LD stays on every page, including
+	// blog posts — Rank Math's own per-post Article schema doesn't cover it.
+	tvr_json_ld( tvr_organization_website_ld() );
+
+	// Rank Math (inc/seo-rank-math.php) owns title/meta/canonical/OG for
+	// single blog posts; printing our own here too would duplicate every tag.
+	if ( is_singular( 'post' ) ) return;
+
 	$seo = tvr_current_page_seo();
 	$url = home_url( add_query_arg( array(), $GLOBALS['wp']->request ) );
 	if ( is_front_page() ) $url = home_url( '/' );
@@ -146,6 +158,4 @@ add_action( 'wp_head', function () {
 	echo '<meta name="twitter:title" content="' . esc_attr( $seo['title'] ) . '" />' . "\n";
 	echo '<meta name="twitter:description" content="' . esc_attr( $seo['description'] ) . '" />' . "\n";
 	echo '<meta name="twitter:image" content="' . esc_url( $image ) . '" />' . "\n";
-
-	tvr_json_ld( tvr_organization_website_ld() );
 }, 5 );

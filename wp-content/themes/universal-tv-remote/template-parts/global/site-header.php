@@ -7,7 +7,7 @@
 					<?php the_custom_logo(); ?>
 				</span>
 			<?php else : ?>
-				<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?>" class="h-8 w-8" />
+				<img src="<?php echo esc_url( tvr_asset( 'logo.webp' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?>" width="32" height="32" class="h-8 w-8" />
 			<?php endif; ?>
 			<span class="flex flex-col leading-none">
 				<span class="text-lg font-bold tracking-tight text-slate-900"><?php echo esc_html( TVR_SITE_NAME ); ?></span>

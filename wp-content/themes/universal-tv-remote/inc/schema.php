@@ -24,7 +24,7 @@ function tvr_organization_website_ld() {
 				'@id'   => $site_url . '#organization',
 				'name'  => TVR_SITE_NAME,
 				'url'   => $site_url,
-				'logo'  => tvr_asset( 'logo.png' ),
+				'logo'  => tvr_asset( 'logo.webp' ),
 			),
 			array(
 				'@type'           => 'WebSite',

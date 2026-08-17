@@ -22,14 +22,14 @@ tvr_json_ld( tvr_software_application_ld( '/download-app/#app', 'iOS, macOS' ) )
 
 <section class="bg-white">
 	<div class="mx-auto max-w-5xl px-4 pt-14 pb-6 text-center sm:pt-20">
-		<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?> app logo" class="mx-auto mb-5 h-20 w-20" />
+		<img src="<?php echo esc_url( tvr_asset( 'logo.webp' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?> app logo" width="80" height="80" class="mx-auto mb-5 h-20 w-20" />
 		<h1 class="text-4xl font-extrabold tracking-tight text-navy-900 sm:text-5xl"<?php echo tvr_heading_style_attr( $page_id ); ?>><?php echo esc_html( $hero_title ); ?></h1>
 		<p class="mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 sm:text-xl"><?php echo esc_html( $hero_subtitle ); ?></p>
 		<div class="mt-9 flex justify-center">
 			<?php get_template_part( 'template-parts/global/store-badges', null, array( 'light' => true ) ); ?>
 		</div>
 	</div>
-	<img src="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?> on iPhone and Mac" width="1600" height="1120" fetchpriority="high" class="mx-auto w-full max-w-3xl px-4 pb-8" />
+	<img src="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?> on iPhone and Mac" width="1536" height="1051" fetchpriority="high" class="mx-auto w-full max-w-3xl px-4 pb-8" />
 </section>
 
 <section class="mx-auto max-w-6xl px-4 py-20">

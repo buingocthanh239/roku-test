@@ -38,7 +38,7 @@ $archive_title = is_search()
 						<?php if ( has_post_thumbnail() ) : ?>
 							<?php the_post_thumbnail( 'large', array( 'class' => 'h-full w-full object-cover transition duration-300 group-hover:scale-105' ) ); ?>
 						<?php else : ?>
-							<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="" class="h-full w-full object-contain p-10 opacity-30" />
+							<img src="<?php echo esc_url( tvr_asset( 'logo.webp' ) ); ?>" alt="" class="h-full w-full object-contain p-10 opacity-30" />
 						<?php endif; ?>
 					</a>
 					<div class="flex flex-1 flex-col justify-center p-6 sm:p-8">
@@ -69,7 +69,7 @@ $archive_title = is_search()
 						<?php if ( has_post_thumbnail() ) : ?>
 							<?php the_post_thumbnail( 'large', array( 'class' => 'h-full w-full object-cover transition duration-300 group-hover:scale-105' ) ); ?>
 						<?php else : ?>
-							<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="" class="h-full w-full object-contain p-10 opacity-30" />
+							<img src="<?php echo esc_url( tvr_asset( 'logo.webp' ) ); ?>" alt="" class="h-full w-full object-contain p-10 opacity-30" />
 						<?php endif; ?>
 					</a>
 					<div class="p-5">

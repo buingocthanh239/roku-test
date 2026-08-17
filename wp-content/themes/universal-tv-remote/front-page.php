@@ -33,7 +33,7 @@ tvr_json_ld( tvr_software_application_ld() );
 
 <section class="bg-white">
 	<div class="mx-auto max-w-5xl px-4 pt-14 pb-6 text-center sm:pt-20">
-		<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="Universal TV Remote logo" class="animate-fade-up mx-auto mb-5 h-20 w-20" />
+		<img src="<?php echo esc_url( tvr_asset( 'logo.webp' ) ); ?>" alt="Universal TV Remote logo" width="80" height="80" class="animate-fade-up mx-auto mb-5 h-20 w-20" />
 		<h1 class="animate-fade-up text-4xl font-extrabold tracking-tight text-navy-900 sm:text-6xl" style="--reveal-delay:80ms;<?php echo esc_attr( tvr_heading_style_css( $home_id ) ); ?>"><?php echo esc_html( $hero_title ); ?></h1>
 		<p class="animate-fade-up mx-auto mt-4 max-w-2xl text-lg font-light text-slate-500 sm:text-xl" style="--reveal-delay:160ms">
 			<?php echo esc_html( $hero_subtitle ); ?>
@@ -50,7 +50,7 @@ tvr_json_ld( tvr_software_application_ld() );
 			<p class="mt-2 text-sm font-medium text-slate-600"><?php echo esc_html( $stars_caption ); ?></p>
 		</div>
 	</div>
-	<img src="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" alt="Universal TV Remote on iPhone" width="4172" height="2856" fetchpriority="high" class="mx-auto w-full max-w-3xl px-4 pb-8" />
+	<img src="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" alt="Universal TV Remote on iPhone" width="1536" height="1051" fetchpriority="high" class="mx-auto w-full max-w-3xl px-4 pb-8" />
 </section>
 
 <section class="border-t border-slate-100 bg-slate-50 py-14">
@@ -121,7 +121,7 @@ tvr_json_ld( tvr_software_application_ld() );
 					<tr class="border-b border-slate-200 bg-slate-50">
 						<th class="p-4 text-left font-medium text-slate-500" style="width:40%">Feature</th>
 						<th class="p-4 text-center align-bottom">
-							<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="" class="mx-auto h-10 w-10 rounded-lg" />
+							<img src="<?php echo esc_url( tvr_asset( 'logo.webp' ) ); ?>" alt="" width="40" height="40" class="mx-auto h-10 w-10 rounded-lg" />
 							<span class="mt-2 block text-xs font-semibold text-brand-600">Universal TV Remote</span>
 						</th>
 						<th class="p-4 text-center align-bottom"><span class="mt-2 block text-xs font-medium text-slate-500"><?php echo esc_html( $competitor_1_name ); ?></span></th>
@@ -151,7 +151,7 @@ tvr_json_ld( tvr_software_application_ld() );
 		<div class="pointer-events-none absolute -top-24 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-brand-500 opacity-20 blur-3xl"></div>
 		<div class="relative flex flex-col items-center gap-10 sm:flex-row sm:items-center sm:justify-between sm:gap-12">
 			<div class="flex flex-col items-center text-center sm:items-start sm:text-left">
-				<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="Universal TV Remote" class="mb-5 h-16 w-16 rounded-2xl shadow-lg" />
+				<img src="<?php echo esc_url( tvr_asset( 'logo.webp' ) ); ?>" alt="Universal TV Remote" width="64" height="64" class="mb-5 h-16 w-16 rounded-2xl shadow-lg" />
 				<h2 class="text-3xl font-bold tracking-tight sm:text-4xl"><?php echo esc_html( $cta_heading ); ?></h2>
 				<p class="mt-3 max-w-sm font-light text-slate-300"><?php echo esc_html( $cta_subheading ); ?></p>
 			</div>

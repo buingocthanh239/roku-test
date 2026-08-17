@@ -60,7 +60,7 @@ tvr_json_ld( tvr_breadcrumb_ld( $breadcrumb_items ) );
 
 	<div class="mt-6 overflow-hidden rounded-2xl bg-gradient-to-br from-navy-900 via-navy-900 to-slate-800">
 		<div class="flex flex-col items-center gap-6 p-6 text-center sm:flex-row sm:items-center sm:gap-8 sm:text-left">
-			<img src="<?php echo esc_url( tvr_asset( 'logo.png' ) ); ?>" alt="Universal TV Remote" class="h-14 w-14 flex-shrink-0 rounded-2xl shadow-lg" />
+			<img src="<?php echo esc_url( tvr_asset( 'logo.webp' ) ); ?>" alt="Universal TV Remote" width="56" height="56" class="h-14 w-14 flex-shrink-0 rounded-2xl shadow-lg" />
 			<div class="min-w-0 flex-1">
 				<h3 class="text-base font-bold text-white">Get Universal TV Remote</h3>
 				<p class="mt-1 text-sm leading-relaxed text-slate-400">Control your <span class="text-slate-200"><?php echo esc_html( $name ); ?></span> TV from your phone &mdash; free to download.</p>

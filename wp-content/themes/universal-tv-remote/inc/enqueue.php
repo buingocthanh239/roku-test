@@ -26,3 +26,19 @@ function tvr_script_defer( $tag, $handle ) {
 	return $tag;
 }
 add_filter( 'script_loader_tag', 'tvr_script_defer', 10, 2 );
+
+// Contact Form 7 enqueues its JS (+ the swv validation library) and CSS on
+// every single page by default, including all ~1200 tv_brand pages that never
+// render a form — only load them on the page that actually has the shortcode.
+function tvr_cf7_should_load_assets( $load ) {
+	if ( is_page_template( 'page-templates/template-contact.php' ) ) {
+		return true;
+	}
+	$post = get_post();
+	if ( $post && has_shortcode( $post->post_content, 'contact-form-7' ) ) {
+		return true;
+	}
+	return false;
+}
+add_filter( 'wpcf7_load_js', 'tvr_cf7_should_load_assets' );
+add_filter( 'wpcf7_load_css', 'tvr_cf7_should_load_assets' );
