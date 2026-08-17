@@ -33,7 +33,7 @@ $archive_title = is_search()
 			$categories = get_the_category();
 		?>
 			<?php if ( $show_featured && 0 === $i ) : ?>
-				<article class="reveal group mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:flex sm:items-stretch">
+				<article class="animate-fade-up group mb-8 overflow-hidden rounded-2xl border border-slate-200 bg-white transition duration-300 hover:-translate-y-1 hover:shadow-lg sm:flex sm:items-stretch">
 					<a href="<?php the_permalink(); ?>" class="block aspect-video w-full shrink-0 overflow-hidden bg-slate-100 sm:aspect-auto sm:w-1/2">
 						<?php if ( has_post_thumbnail() ) : ?>
 							<?php the_post_thumbnail( 'large', array( 'class' => 'h-full w-full object-cover transition duration-300 group-hover:scale-105' ) ); ?>

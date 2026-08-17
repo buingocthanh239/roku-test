@@ -15,10 +15,10 @@ $mac_url = $args['mac_url'] ?? $links['mac'];
 	<?php endif; ?>
 	<div class="flex flex-col gap-2">
 		<a href="<?php echo esc_url( $ios_url ); ?>" target="_blank" rel="noopener noreferrer">
-			<img src="<?php echo esc_url( tvr_asset( 'appStore.svg' ) ); ?>" alt="Download on the App Store" class="h-10 w-auto sm:h-[52px]" />
+			<img src="<?php echo esc_url( tvr_asset( 'appStore.svg' ) ); ?>" alt="Download on the App Store" width="120" height="40" class="h-10 w-auto sm:h-[52px]" />
 		</a>
 		<a href="<?php echo esc_url( $mac_url ); ?>" target="_blank" rel="noopener noreferrer">
-			<img src="<?php echo esc_url( tvr_asset( 'macAppStore.svg' ) ); ?>" alt="Download on the Mac App Store" class="h-10 w-auto sm:h-[52px]" />
+			<img src="<?php echo esc_url( tvr_asset( 'macAppStore.svg' ) ); ?>" alt="Download on the Mac App Store" width="156" height="40" class="h-10 w-auto sm:h-[52px]" />
 		</a>
 		<?php if ( $qr ) : ?>
 			<span class="hidden sm:block text-sm leading-snug <?php echo $light ? 'text-slate-500' : 'text-slate-300'; ?>">Scan the QR code to download on your iPhone</span>

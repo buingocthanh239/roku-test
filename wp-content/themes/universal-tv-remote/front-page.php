@@ -50,7 +50,7 @@ tvr_json_ld( tvr_software_application_ld() );
 			<p class="mt-2 text-sm font-medium text-slate-600"><?php echo esc_html( $stars_caption ); ?></p>
 		</div>
 	</div>
-	<img src="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" alt="Universal TV Remote on iPhone" width="1536" height="1051" fetchpriority="high" class="mx-auto w-full max-w-3xl px-4 pb-8" />
+	<img src="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" srcset="<?php echo esc_attr( tvr_asset( 'app-devices-800.webp' ) . ' 800w, ' . tvr_asset( 'app-devices.webp' ) . ' 1536w' ); ?>" sizes="(min-width: 800px) 768px, calc(100vw - 32px)" alt="Universal TV Remote on iPhone" width="1536" height="1051" fetchpriority="high" class="mx-auto w-full max-w-3xl px-4 pb-8" />
 </section>
 
 <section class="border-t border-slate-100 bg-slate-50 py-14">

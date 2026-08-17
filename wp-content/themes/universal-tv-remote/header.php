@@ -4,7 +4,10 @@
 <meta charset="<?php bloginfo( 'charset' ); ?>" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <meta name="theme-color" content="#001b38" />
-<link rel="preload" as="image" href="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" fetchpriority="high" />
+<?php if ( is_front_page() || is_page_template( 'page-templates/template-download-app.php' ) ) : ?>
+<link rel="preload" as="image" href="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" imagesrcset="<?php echo esc_attr( tvr_asset( 'app-devices-800.webp' ) . ' 800w, ' . tvr_asset( 'app-devices.webp' ) . ' 1536w' ); ?>" imagesizes="(min-width: 800px) 768px, calc(100vw - 32px)" fetchpriority="high" />
+<?php endif; ?>
+<?php tvr_blog_featured_image_preload(); ?>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <?php $fonts_href = 'https://fonts.googleapis.com/css2?family=Google+Sans:ital,opsz,wght@0,17..18,400..700;1,17..18,400..700&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap'; ?>

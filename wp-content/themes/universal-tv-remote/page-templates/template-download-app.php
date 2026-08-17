@@ -29,7 +29,7 @@ tvr_json_ld( tvr_software_application_ld( '/download-app/#app', 'iOS, macOS' ) )
 			<?php get_template_part( 'template-parts/global/store-badges', null, array( 'light' => true ) ); ?>
 		</div>
 	</div>
-	<img src="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?> on iPhone and Mac" width="1536" height="1051" fetchpriority="high" class="mx-auto w-full max-w-3xl px-4 pb-8" />
+	<img src="<?php echo esc_url( tvr_asset( 'app-devices.webp' ) ); ?>" srcset="<?php echo esc_attr( tvr_asset( 'app-devices-800.webp' ) . ' 800w, ' . tvr_asset( 'app-devices.webp' ) . ' 1536w' ); ?>" sizes="(min-width: 800px) 768px, calc(100vw - 32px)" alt="<?php echo esc_attr( TVR_SITE_NAME ); ?> on iPhone and Mac" width="1536" height="1051" fetchpriority="high" class="mx-auto w-full max-w-3xl px-4 pb-8" />
 </section>
 
 <section class="mx-auto max-w-6xl px-4 py-20">

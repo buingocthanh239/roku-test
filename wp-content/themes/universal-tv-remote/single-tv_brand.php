@@ -66,10 +66,10 @@ tvr_json_ld( tvr_breadcrumb_ld( $breadcrumb_items ) );
 				<p class="mt-1 text-sm leading-relaxed text-slate-400">Control your <span class="text-slate-200"><?php echo esc_html( $name ); ?></span> TV from your phone &mdash; free to download.</p>
 			</div>
 			<div class="flex flex-shrink-0 items-center gap-4">
-				<img src="<?php echo esc_url( tvr_asset( 'qr-ios.png' ) ); ?>" alt="Scan to download" class="h-20 w-20 rounded-lg bg-white p-1" />
+				<img src="<?php echo esc_url( tvr_asset( 'qr-ios.png' ) ); ?>" alt="Scan to download" width="80" height="80" class="h-20 w-20 rounded-lg bg-white p-1" />
 				<div class="flex flex-col gap-1">
 					<a href="<?php echo esc_url( $links['ios'] ); ?>" target="_blank" rel="noopener noreferrer">
-						<img src="<?php echo esc_url( tvr_asset( 'appStore.svg' ) ); ?>" alt="Download on the App Store" class="h-10 w-auto" />
+						<img src="<?php echo esc_url( tvr_asset( 'appStore.svg' ) ); ?>" alt="Download on the App Store" width="120" height="40" class="h-10 w-auto" />
 					</a>
 					<p class="text-xs leading-snug text-slate-400">Scan QR to download on iPhone</p>
 				</div>

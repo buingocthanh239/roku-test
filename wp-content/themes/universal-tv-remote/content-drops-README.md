@@ -1,15 +1,25 @@
 # Blog folder-drop convention
 
-Drop one folder per blog post here — either by copying it onto the server
-directly, or by uploading it from wp-admin: **Posts → Import from Folder**
-(or the "Add Folder Post" button next to "Add Post" on Posts → All Posts)
-has an upload control that accepts a whole folder at once (including a
-parent folder containing several post folders, for bulk upload), and lists
-every folder's validation status before you commit to running the import.
-`scripts/import-blog-posts.php` does the same thing from the command line,
-for anyone who prefers that. Either way, each import is idempotent —
-re-running after fixing a mistake in a folder updates the same Draft post
-instead of creating a duplicate.
+Drop one folder per blog post into **`wp-content/uploads/content-drops/`**
+(not inside the theme — see note below) — either by copying it onto the
+server directly, or by uploading it from wp-admin: **Posts → Import from
+Folder** (or the "Add Folder Post" button next to "Add Post" on Posts →
+All Posts) has an upload control that accepts a whole folder at once
+(including a parent folder containing several post folders, for bulk
+upload), and lists every folder's validation status before you commit to
+running the import. `scripts/import-blog-posts.php` does the same thing
+from the command line, for anyone who prefers that. Either way, each
+import is idempotent — re-running after fixing a mistake in a folder
+updates the same Draft post instead of creating a duplicate.
+
+**Why `wp-content/uploads/` and not a folder inside the theme:** most WP
+hosting (this project's production included) makes `wp-content/themes/`
+read-only to the PHP process — only `wp-content/uploads/` is guaranteed
+writable, since WordPress itself requires that for any media upload to
+work at all. `tvr_blog_content_drops_dir()` in `inc/blog-import.php`
+builds the actual path via `wp_upload_dir()`, so this note is the only
+place the location is hardcoded — nothing else needs to know it moved if
+it ever does again.
 
 Folder name = the post's URL slug, e.g. `content-drops/how-to-fix-tv-wont-turn-on/`.
 

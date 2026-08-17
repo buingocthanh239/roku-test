@@ -157,7 +157,7 @@ function tvr_render_import_blog_posts_page() {
 	<div class="wrap">
 		<h1>Import Blog Posts from Folder</h1>
 		<p>
-			See <code>content-drops/README.md</code> for the folder convention
+			See <code>content-drops-README.md</code> for the folder convention
 			(<code>content.docx</code> + <code>feature.&lt;ext&gt;</code> + inline
 			images + <code>meta.txt</code>). Every post is created/updated as a
 			<strong>Draft</strong> — nothing here is ever published. SEO Title,

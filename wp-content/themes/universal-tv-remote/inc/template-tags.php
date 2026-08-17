@@ -279,6 +279,39 @@ function tvr_find_brand_by_domain( $service ) {
 	return null;
 }
 
+// Blog listing (index.php) gives its first post a wide "Featured" image —
+// that's the page's LCP element, but unlike the static hero images on
+// front-page.php/template-download-app.php its URL changes with whatever
+// post is newest, so it can't be a hardcoded <link rel=preload> in
+// header.php. Peek at the already-resolved main query instead of running a
+// second one, so the browser's preload scanner can start the fetch before
+// the parser reaches the <img> tag further down the page.
+function tvr_blog_featured_image_preload() {
+	if ( ! is_home() || is_paged() || is_search() ) {
+		return;
+	}
+	global $wp_query;
+	$first_post = ! empty( $wp_query->posts ) ? $wp_query->posts[0] : null;
+	if ( ! $first_post || ! has_post_thumbnail( $first_post ) ) {
+		return;
+	}
+	$thumb_id = get_post_thumbnail_id( $first_post );
+	$src      = wp_get_attachment_image_src( $thumb_id, 'large' );
+	if ( ! $src ) {
+		return;
+	}
+	$srcset = wp_get_attachment_image_srcset( $thumb_id, 'large' );
+	$sizes  = wp_get_attachment_image_sizes( $thumb_id, 'large' );
+	echo '<link rel="preload" as="image" href="' . esc_url( $src[0] ) . '"';
+	if ( $srcset ) {
+		echo ' imagesrcset="' . esc_attr( $srcset ) . '"';
+	}
+	if ( $sizes ) {
+		echo ' imagesizes="' . esc_attr( $sizes ) . '"';
+	}
+	echo ' fetchpriority="high" />' . "\n";
+}
+
 function tvr_service_by_post( $post ) {
 	$terms = wp_get_post_terms( $post->ID, 'tv_category', array( 'fields' => 'slugs' ) );
 	return array(

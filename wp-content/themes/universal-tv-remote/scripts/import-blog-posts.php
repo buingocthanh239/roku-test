@@ -6,7 +6,7 @@
  * via wp-load.php below, same as every other inc/*.php) so this script and
  * the wp-admin "Import from Folder" page (Posts -> Import from Folder,
  * inc/admin-blog-import.php) share one implementation. Folder convention is
- * documented in content-drops/README.md.
+ * documented in content-drops-README.md.
  *
  * Local dev: run with the Local site's own PHP binary + php.ini, same as
  * import-services.php (see that file's header / reference-local-wp-cli
@@ -43,7 +43,7 @@ if ( empty( $admins ) ) {
 wp_set_current_user( $admins[0] );
 
 if ( empty( tvr_blog_list_content_drop_folders() ) ) {
-	echo "No folders found in content-drops/. Drop one folder per post there first — see content-drops/README.md.\n";
+	echo "No folders found in content-drops/. Drop one folder per post there first — see content-drops-README.md.\n";
 	exit( 0 );
 }
 

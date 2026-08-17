@@ -4,7 +4,7 @@
  * Loaded on every request (like the rest of inc/) so both the CLI script
  * (scripts/import-blog-posts.php) and the wp-admin "Import from Folder"
  * page (inc/admin-blog-import.php, Posts -> Import from Folder) call the
- * exact same parsing/import code — see content-drops/README.md for the
+ * exact same parsing/import code — see content-drops-README.md for the
  * folder convention this parses.
  *
  * .docx is parsed by hand (ZipArchive + DOMDocument over word/document.xml
@@ -20,8 +20,20 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 const TVR_DOCX_NS_W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
 
+/**
+ * Lives under wp-content/uploads/, NOT inside the theme
+ * (wp-content/themes/.../content-drops/, where it originally lived) —
+ * production hosting (and most hardened WP setups generally) makes
+ * wp-content/themes/ read-only to the PHP process for exactly the reason
+ * this folder needs write access: uploads/ is the one directory WP itself
+ * requires to always be writable, so it's the only safe/portable place for
+ * runtime-uploaded content to live. Confirmed as the actual failure mode
+ * in production ("failed to save on server" for every file) before moving
+ * this — local dev's Local-by-Flywheel PHP process has no such
+ * restriction, which is why it worked there without ever surfacing this.
+ */
 function tvr_blog_content_drops_dir() {
-	return get_template_directory() . '/content-drops';
+	return wp_upload_dir()['basedir'] . '/content-drops';
 }
 
 /**
@@ -385,6 +397,25 @@ function tvr_docx_extract( $docx_path ) {
 	);
 }
 
+// WP only recompresses an upload when it generates a smaller intermediate
+// size (e.g. "large"); an original already at or below that threshold is
+// served to visitors byte-for-byte as exported by whoever wrote the post,
+// which is often far above a reasonable web quality. Re-encode JPEGs (the
+// only format content-writer screenshots/photos come in) through WP's own
+// image editor right after upload so even the "original" is web-sized.
+function tvr_blog_optimize_upload( $file_path ) {
+	$filetype = wp_check_filetype( $file_path );
+	if ( 'image/jpeg' !== $filetype['type'] ) {
+		return;
+	}
+	$editor = wp_get_image_editor( $file_path );
+	if ( is_wp_error( $editor ) ) {
+		return;
+	}
+	$editor->set_quality( 82 );
+	$editor->save( $file_path );
+}
+
 /** Same sideload pattern as import-services.php's icon sideload. */
 function tvr_blog_sideload_image( $path, $title, $post_id = 0, $alt = '' ) {
 	require_once ABSPATH . 'wp-admin/includes/image.php';
@@ -395,6 +426,7 @@ function tvr_blog_sideload_image( $path, $title, $post_id = 0, $alt = '' ) {
 	if ( ! empty( $upload['error'] ) ) {
 		return new WP_Error( 'upload_failed', $upload['error'] );
 	}
+	tvr_blog_optimize_upload( $upload['file'] );
 	$filetype      = wp_check_filetype( $upload['file'] );
 	$attachment_id = wp_insert_attachment( array(
 		'post_mime_type' => $filetype['type'],
