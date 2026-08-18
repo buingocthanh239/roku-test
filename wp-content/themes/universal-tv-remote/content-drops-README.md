@@ -10,7 +10,12 @@ upload), and lists every folder's validation status before you commit to
 running the import. `scripts/import-blog-posts.php` does the same thing
 from the command line, for anyone who prefers that. Either way, each
 import is idempotent — re-running after fixing a mistake in a folder
-updates the same Draft post instead of creating a duplicate.
+updates the same Draft post instead of creating a duplicate. A folder that
+imports successfully (no error) is moved into `content-drops/_imported/`
+right after — archived, not deleted, so the "ready to import" list doesn't
+keep piling up with already-done folders, but the original `.docx`/images
+are still there if ever needed again. Re-importing the same slug later
+replaces its old archived copy.
 
 **Why `wp-content/uploads/` and not a folder inside the theme:** most WP
 hosting (this project's production included) makes `wp-content/themes/`
@@ -35,40 +40,38 @@ Each folder must contain:
 
 The importer understands the content pipeline's real doc format directly —
 no manual reformatting needed. A fixed metadata block at the very top of
-the document, each on its own paragraph:
+the document — **Title / Meta Description / Tag / a focus-keyword field
+(either "Main Keyword" or "Primary Keyword" — both recognized) /
+Secondary Keywords / Outline** — written either way, both work and can be
+mixed within the same doc:
 
 ```
 Title
 <the article's title>
-
-Meta Description
-<the meta description text>
-
-Tag
-<comma-separated tags>
-
-Main Keyword
-<the focus keyword>
-
-Secondary Keywords
-<bulleted list of secondary keyword phrases>
-
-Outline
-<bulleted list matching the H2 sections below>
+```
+or on one line:
+```
+Title: <the article's title>
 ```
 
+A short unrecognized heading right before the block (e.g. "SEO Publishing
+Snapshot") is fine — it's skipped rather than treated as content or as a
+sign this doc doesn't use the template at all.
+
 ...followed by the article body (the body's own repeat of the title, right
-after Outline, is recognized and dropped automatically — WordPress already
-renders the post title as the page's real heading). From **Title / Meta
-Description / Main Keyword**, the importer auto-fills Rank Math's SEO
-Title / Meta Description / Focus Keyword fields on the Draft — reviewable
-and editable in the Rank Math box same as always, just not blank to start.
-(Rank Math itself needs a one-time setup per environment before this
-works — if it's missing, wp-admin shows a notice with a one-click
-"Activate & Configure Rank Math" button, no server access needed.) `Tag`
-is merged into the post's WordPress tags (together with `meta.txt`'s
-`tags:` line, if both are present). `Secondary Keywords` is parsed but not
-currently applied anywhere.
+after the metadata block, is recognized by matching text — or, failing
+that, a clearly oversized heading — and dropped automatically; WordPress
+already renders the post title as the page's real heading). From **Title /
+Meta Description / Main-or-Primary Keyword**, the importer auto-fills Rank
+Math's SEO Title / Meta Description / Focus Keyword fields on the Draft —
+reviewable and editable in the Rank Math box same as always, just not
+blank to start. (Rank Math itself needs a one-time setup per environment
+before this works — if it's missing, wp-admin shows a notice with a
+one-click "Activate & Configure Rank Math" button, no server access
+needed.) `Tag` is merged into the post's WordPress tags (together with
+`meta.txt`'s `tags:` line, if both are present; splits on comma or
+semicolon — seen both ways in practice). `Secondary Keywords` is parsed
+but not currently applied anywhere.
 
 Body headings don't need any particular Word style — they're detected by
 size (a large bold line = H2, a smaller bold line = H3), matching what the

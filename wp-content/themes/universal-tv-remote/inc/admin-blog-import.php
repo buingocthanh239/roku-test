@@ -157,12 +157,14 @@ function tvr_render_import_blog_posts_page() {
 	<div class="wrap">
 		<h1>Import Blog Posts from Folder</h1>
 		<p>
-			See <code>content-drops-README.md</code> for the folder convention
-			(<code>content.docx</code> + <code>feature.&lt;ext&gt;</code> + inline
-			images + <code>meta.txt</code>). Every post is created/updated as a
-			<strong>Draft</strong> — nothing here is ever published. SEO Title,
-			Meta Description and Focus Keyword are not touched; set those in the
-			Rank Math box after reviewing each Draft.
+			See <code>content-drops-README.md</code> for the folder convention. Every
+			post is created/updated as a <strong>Draft</strong> — nothing here is ever
+			published. SEO Title/Meta Description/Focus Keyword are auto-filled from
+			the docx when it has that metadata — still worth reviewing in the Rank
+			Math box before the post goes out. A folder that imports successfully is
+			moved out of this list automatically (into an
+			<code>_imported/</code> subfolder, not deleted — the original files are
+			still there if ever needed again).
 		</p>
 
 		<?php if ( null !== $results ) : ?>

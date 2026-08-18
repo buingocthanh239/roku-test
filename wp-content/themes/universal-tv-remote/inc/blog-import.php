@@ -163,11 +163,12 @@ function tvr_docx_feature_marker( $plain ) {
 
 /**
  * This content pipeline's real docs open with a fixed metadata block —
- * labelled sections (each its own paragraph, larger + bold), in this
- * order, before the article body starts:
- *   Title / Meta Description / Tag / Main Keyword / Secondary Keywords / Outline
- * Recognized by exact (case-insensitive) label text, not by any style —
- * this template doesn't use named paragraph styles at all.
+ * Title / Meta Description / Tag / a focus-keyword field / Secondary
+ * Keywords / Outline — before the article body starts. Two different
+ * label spellings have been seen in practice: "Main Keyword" and "Primary
+ * Keyword" for the same field, so both are recognized as aliases. Not
+ * every doc's own label text will necessarily match this exact set —
+ * treat this list as "known so far", not exhaustive.
  */
 function tvr_docx_metadata_labels() {
 	return array(
@@ -176,15 +177,34 @@ function tvr_docx_metadata_labels() {
 		'tag'                => 'tags',
 		'tags'               => 'tags',
 		'main keyword'       => 'focus_keyword',
+		'primary keyword'    => 'focus_keyword',
 		'focus keyword'      => 'focus_keyword',
 		'secondary keywords' => 'secondary_keywords',
 		'outline'            => 'outline',
 	);
 }
 
+/** Label alone on its own paragraph (the value follows on later paragraphs). */
 function tvr_docx_match_metadata_label( $plain ) {
 	$labels = tvr_docx_metadata_labels();
 	return $labels[ strtolower( trim( $plain ) ) ] ?? null;
+}
+
+/**
+ * "Label: value" on a single paragraph — the other real-world shape seen
+ * in practice, alongside the label-alone-then-value-paragraphs shape
+ * tvr_docx_match_metadata_label() handles. Checked separately since the
+ * value here is complete in one paragraph (may itself contain colons,
+ * e.g. "Title: Foo: A Guide" — greedy match to end of string handles
+ * that), unlike the multi-paragraph continuation case.
+ */
+function tvr_docx_match_inline_metadata( $plain ) {
+	foreach ( tvr_docx_metadata_labels() as $label_text => $field ) {
+		if ( preg_match( '/^' . preg_quote( $label_text, '/' ) . '\s*:\s*(.+)$/i', trim( $plain ), $m ) ) {
+			return array( 'key' => $field, 'value' => trim( $m[1] ) );
+		}
+	}
+	return null;
 }
 
 /**
@@ -234,19 +254,51 @@ function tvr_docx_extract( $docx_path ) {
 	$body_children = $xpath->query( '/w:document/w:body/*' );
 	$node_count    = $body_children->length;
 
-	// --- Pass 1: the metadata block, if this doc has one. ---
-	$metadata_raw   = array();
-	$current_label  = null;
-	$found_metadata = false;
-	$body_start     = 0;
+	/*
+	 * --- Pass 1: the metadata block, if this doc has one. ---
+	 * Two label shapes are both recognized (real docs have used either):
+	 *   - "Label" alone on its own paragraph, value(s) on the paragraph(s)
+	 *     after it (tvr_docx_match_metadata_label())
+	 *   - "Label: value" together on one paragraph
+	 *     (tvr_docx_match_inline_metadata())
+	 * A handful of leading paragraphs that match neither (e.g. a wrapper
+	 * heading like "SEO Publishing Snapshot") are tolerated before giving
+	 * up — real content-brief docs sometimes have one, and skipping it
+	 * here also keeps it out of the published post body. Once a label
+	 * has actually been found, anything after that failing to match a
+	 * label/continuation ends the block (start of the real article body).
+	 */
+	$metadata_raw    = array();
+	$current_label   = null;
+	$found_metadata  = false;
+	$body_start      = 0;
+	$preamble_budget = 5;
 
 	for ( $i = 0; $i < $node_count; $i++ ) {
 		$node = $body_children->item( $i );
-		if ( 'w:p' !== $node->nodeName ) break; // a table before any label - not this template
+		if ( 'w:p' !== $node->nodeName ) {
+			if ( $found_metadata ) break;
+			continue;
+		}
 
 		$plain = trim( tvr_docx_para_plain_text( $node, $xpath ) );
-		$label = tvr_docx_match_metadata_label( $plain );
 
+		if ( '' === $plain ) {
+			if ( $found_metadata ) $body_start = $i + 1;
+			continue;
+		}
+
+		$inline = tvr_docx_match_inline_metadata( $plain );
+		if ( $inline ) {
+			if ( ! isset( $metadata_raw[ $inline['key'] ] ) ) $metadata_raw[ $inline['key'] ] = array();
+			$metadata_raw[ $inline['key'] ][] = $inline['value'];
+			$current_label  = null; // self-contained — nothing to continue onto
+			$found_metadata = true;
+			$body_start     = $i + 1;
+			continue;
+		}
+
+		$label = tvr_docx_match_metadata_label( $plain );
 		if ( $label ) {
 			$current_label  = $label;
 			$found_metadata = true;
@@ -255,9 +307,12 @@ function tvr_docx_extract( $docx_path ) {
 			continue;
 		}
 
-		if ( ! $found_metadata ) break; // doesn't open with a recognized label at all
+		if ( ! $found_metadata ) {
+			if ( $i >= $preamble_budget ) break; // gave the preamble its chance; this isn't the template
+			continue;
+		}
 
-		if ( '' === $plain ) { $body_start = $i + 1; continue; }
+		if ( null === $current_label ) break; // nothing open to continue — real body starts here
 
 		if ( 'outline' === $current_label ) {
 			$is_list = $xpath->query( './w:pPr/w:numPr', $node )->length > 0;
@@ -276,12 +331,23 @@ function tvr_docx_extract( $docx_path ) {
 		'secondary_keywords' => isset( $metadata_raw['secondary_keywords'] ) ? trim( implode( ', ', $metadata_raw['secondary_keywords'] ) ) : '',
 	);
 
-	// The body always repeats the title once more, as a large heading,
-	// right after the metadata block — drop that repeat.
-	if ( $found_metadata && $body_start < $node_count ) {
+	/*
+	 * The body commonly repeats the title once more right after the
+	 * metadata block — drop that repeat. Checked by text match against
+	 * the title already captured above (not just a large font size): a
+	 * different real doc used the exact same size for this repeat as for
+	 * an ordinary H2, so size alone isn't reliable across templates,
+	 * while the text genuinely being the same title is a much stronger
+	 * signal either way. Still checks size too, as a fallback for a
+	 * repeat that isn't textually identical (e.g. re-wrapped/punctuated
+	 * slightly differently) but is unambiguously oversized.
+	 */
+	if ( $found_metadata && '' !== $metadata['title'] && $body_start < $node_count ) {
 		$next = $body_children->item( $body_start );
-		if ( $next && 'w:p' === $next->nodeName && tvr_docx_para_font_size( $next, $xpath ) >= 40 ) {
-			$body_start++;
+		if ( $next && 'w:p' === $next->nodeName ) {
+			$next_text = trim( tvr_docx_para_plain_text( $next, $xpath ) );
+			$is_repeat = 0 === strcasecmp( $next_text, $metadata['title'] ) || tvr_docx_para_font_size( $next, $xpath ) >= 40;
+			if ( $is_repeat ) $body_start++;
 		}
 	}
 
@@ -708,9 +774,10 @@ function tvr_blog_import_folder( $dir ) {
 
 	// Tags can come from meta.txt and/or the docx's own `Tag` metadata
 	// field — merge both rather than picking one, since a real folder
-	// might only have either.
+	// might only have either. Split on comma OR semicolon: different real
+	// docs have used either as the list separator for this field.
 	$docx_tags = '' !== $parsed['metadata']['tags']
-		? array_map( 'trim', explode( ',', $parsed['metadata']['tags'] ) )
+		? array_map( 'trim', preg_split( '/[,;]/', $parsed['metadata']['tags'] ) )
 		: array();
 	$all_tags = array_values( array_unique( array_filter( array_merge( $meta['tags'], $docx_tags ) ) ) );
 	if ( ! empty( $all_tags ) ) wp_set_object_terms( $post_id, $all_tags, 'post_tag', false );
@@ -724,10 +791,45 @@ function tvr_blog_import_folder( $dir ) {
 	);
 }
 
-/** List folders currently sitting in content-drops/, newest first. */
+/**
+ * Folders that imported successfully get moved here (see
+ * tvr_blog_archive_content_drop_folder()) so the "ready to import" list
+ * doesn't keep accumulating already-done folders — archived, not deleted,
+ * so the original .docx/images are still there if ever needed again.
+ */
+function tvr_blog_content_drops_archive_dir() {
+	return tvr_blog_content_drops_dir() . '/_imported';
+}
+
+/** List folders currently sitting in content-drops/, newest first — excludes the archive. */
 function tvr_blog_list_content_drop_folders() {
 	$folders = glob( tvr_blog_content_drops_dir() . '/*', GLOB_ONLYDIR );
-	return $folders ? $folders : array();
+	if ( ! $folders ) return array();
+	$archive_dir = tvr_blog_content_drops_archive_dir();
+	return array_values( array_filter( $folders, function ( $dir ) use ( $archive_dir ) {
+		return $dir !== $archive_dir;
+	} ) );
+}
+
+/** Recursively deletes a directory — used only to clear an old archived copy before replacing it. */
+function tvr_blog_rrmdir( $dir ) {
+	if ( ! is_dir( $dir ) ) return;
+	foreach ( scandir( $dir ) as $entry ) {
+		if ( '.' === $entry || '..' === $entry ) continue;
+		$path = $dir . '/' . $entry;
+		is_dir( $path ) ? tvr_blog_rrmdir( $path ) : unlink( $path );
+	}
+	rmdir( $dir );
+}
+
+/** Moves a successfully-imported folder out of the pending list, into the archive. */
+function tvr_blog_archive_content_drop_folder( $dir ) {
+	$archive_root = tvr_blog_content_drops_archive_dir();
+	if ( ! file_exists( $archive_root ) ) wp_mkdir_p( $archive_root );
+
+	$dest = $archive_root . '/' . basename( $dir );
+	if ( file_exists( $dest ) ) tvr_blog_rrmdir( $dest ); // re-imported the same slug — replace the old archive copy
+	@rename( $dir, $dest );
 }
 
 /**
@@ -753,6 +855,8 @@ function tvr_blog_import_run_all() {
 			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $result->get_error_message(), 'auto_placed' => array(), 'orphaned' => array() );
 			continue;
 		}
+
+		tvr_blog_archive_content_drop_folder( $dir );
 
 		$results[] = array(
 			'slug'        => $slug,
