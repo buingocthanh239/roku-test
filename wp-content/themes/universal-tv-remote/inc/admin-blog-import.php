@@ -182,8 +182,11 @@ function tvr_render_import_blog_posts_page() {
 								<?php else : ?>
 									<span style="color:#008a20;">✓ <?php echo esc_html( ucfirst( $r['status'] ) ); ?></span>
 									— <a href="<?php echo esc_url( $r['message'] ); ?>">Edit post</a>
+									<?php if ( $r['auto_placed'] ) : ?>
+										<br /><span style="color:#996800;">Auto-placed one per H2 section: <?php echo esc_html( implode( ', ', $r['auto_placed'] ) ); ?></span>
+									<?php endif; ?>
 									<?php if ( $r['orphaned'] ) : ?>
-										<br /><span style="color:#996800;">Warning: image(s) never referenced in content.docx: <?php echo esc_html( implode( ', ', $r['orphaned'] ) ); ?></span>
+										<br /><span style="color:#996800;">Warning: image(s) left over (more unused images than H2 sections): <?php echo esc_html( implode( ', ', $r['orphaned'] ) ); ?></span>
 									<?php endif; ?>
 								<?php endif; ?>
 							</td>
@@ -234,8 +237,11 @@ function tvr_render_import_blog_posts_page() {
 								<?php if ( $validated['feature_auto'] ) : ?>
 									<br /><span style="color:#996800;">Featured image: auto-picked <code><?php echo esc_html( basename( $validated['feature_path'] ) ); ?></code> (no <code>[feature: ...]</code> marker or <code>feature.&lt;ext&gt;</code> file — add one to choose a different image instead)</span>
 								<?php endif; ?>
+								<?php if ( $validated['auto_placed'] ) : ?>
+									<br /><span style="color:#996800;">Will auto-place one per H2 section (no <code>[image: ...]</code> marker used): <?php echo esc_html( implode( ', ', $validated['auto_placed'] ) ); ?></span>
+								<?php endif; ?>
 								<?php if ( $validated['orphaned'] ) : ?>
-									<br /><span style="color:#996800;">Warning: image(s) never referenced in the docx: <?php echo esc_html( implode( ', ', $validated['orphaned'] ) ); ?></span>
+									<br /><span style="color:#996800;">Warning: image(s) left over (more unused images than H2 sections): <?php echo esc_html( implode( ', ', $validated['orphaned'] ) ); ?></span>
 								<?php endif; ?>
 							<?php endif; ?>
 						</td>

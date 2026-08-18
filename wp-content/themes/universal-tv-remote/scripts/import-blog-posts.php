@@ -61,8 +61,11 @@ foreach ( $results as $r ) {
 	}
 
 	echo '[' . strtoupper( $r['status'] ) . "] {$r['slug']} — {$r['message']}\n";
+	if ( $r['auto_placed'] ) {
+		echo '          Auto-placed one per H2 section (no [image: ...] marker used): ' . implode( ', ', $r['auto_placed'] ) . "\n";
+	}
 	if ( $r['orphaned'] ) {
-		echo '          Warning: image(s) in folder never referenced in content.docx: ' . implode( ', ', $r['orphaned'] ) . "\n";
+		echo '          Warning: image(s) left over (more unused images than H2 sections): ' . implode( ', ', $r['orphaned'] ) . "\n";
 	}
 	'created' === $r['status'] ? $created++ : $updated++;
 }

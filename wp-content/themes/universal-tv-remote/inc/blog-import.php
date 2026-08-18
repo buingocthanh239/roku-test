@@ -476,12 +476,12 @@ function tvr_blog_set_category( $post_id, $name ) {
 /**
  * Read-only structure validation: required files present, the .docx
  * actually parses, every `[image: ...]` marker has a matching file in the
- * folder, plus a heads-up for image files that are present but never
- * referenced. No DB writes — safe to call just to preview/validate a
- * folder before deciding to import it. Used by both the real import
+ * folder, plus which unmarked images get auto-placed one-per-H2-section vs.
+ * genuinely left over. No DB writes — safe to call just to preview/validate
+ * a folder before deciding to import it. Used by both the real import
  * (below) and the admin page's folder listing/upload preview.
  *
- * @return array{slug:string,parsed:array,feature_path:string,feature_alt:string,feature_auto:bool,orphaned:array,existing:WP_Post[]}|WP_Error
+ * @return array{slug:string,parsed:array,feature_path:string,feature_alt:string,feature_auto:bool,auto_placed:array,orphaned:array,existing:WP_Post[]}|WP_Error
  */
 function tvr_blog_validate_folder( $dir ) {
 	$slug = basename( $dir );
@@ -550,7 +550,7 @@ function tvr_blog_validate_folder( $dir ) {
 		}
 	}
 
-	$orphaned = array();
+	$unused = array();
 	foreach ( glob( $dir . '/*' ) as $f ) {
 		if ( $f === $feature_path ) continue;
 		if ( ! preg_match( '/\.(jpe?g|png|webp|gif)$/i', $f ) ) continue;
@@ -558,8 +558,24 @@ function tvr_blog_validate_folder( $dir ) {
 		foreach ( $parsed['images'] as $img ) {
 			if ( basename( $f ) === $img['file'] ) { $referenced = true; break; }
 		}
-		if ( ! $referenced ) $orphaned[] = basename( $f );
+		if ( ! $referenced ) $unused[] = basename( $f );
 	}
+	natsort( $unused );
+	$unused = array_values( $unused );
+
+	/*
+	 * Images sitting in the folder but not claimed by any [feature: ...]/
+	 * [image: ...] marker aren't just left out — same reasoning as the
+	 * feature-image auto-pick above, most real content folders never mark
+	 * every image explicitly. Up to one per H2 section gets auto-placed
+	 * right after that section's heading (centered, full width — per
+	 * explicit feedback), in natural filename order. Anything left over
+	 * past that (more unused images than H2 sections) really is unused
+	 * and stays flagged as orphaned.
+	 */
+	$h2_count    = substr_count( $parsed['html'], '<h2>' );
+	$auto_placed = array_slice( $unused, 0, $h2_count );
+	$orphaned    = array_slice( $unused, $h2_count );
 
 	$existing = get_posts( array(
 		'post_type'      => 'post',
@@ -590,6 +606,7 @@ function tvr_blog_validate_folder( $dir ) {
 		'feature_path' => $feature_path,
 		'feature_alt'  => $feature_alt,
 		'feature_auto' => $feature_auto,
+		'auto_placed'  => $auto_placed,
 		'orphaned'     => $orphaned,
 		'existing'     => $existing,
 	);
@@ -613,6 +630,33 @@ function tvr_blog_set_rank_math_meta( $post_id, $metadata ) {
 }
 
 /**
+ * Splices one auto-placed image (see tvr_blog_validate_folder()'s
+ * `auto_placed` list — unmarked images the folder had left over, one per
+ * H2 section) in right after each H2 section's heading, centered and full
+ * width per explicit feedback ("chèn đúng mục ... ảnh căn giữa, full
+ * size"). Sideloads each image as it's placed.
+ */
+function tvr_blog_place_auto_images( $content, $dir, $post_id, $auto_placed, $alt_fallback ) {
+	if ( empty( $auto_placed ) ) return $content;
+
+	$parts   = preg_split( '/(<\/h2>)/', $content, -1, PREG_SPLIT_DELIM_CAPTURE );
+	$rebuilt = '';
+	$i       = 0;
+
+	foreach ( $parts as $part ) {
+		$rebuilt .= $part;
+		if ( '</h2>' === $part && $i < count( $auto_placed ) ) {
+			$file          = $auto_placed[ $i++ ];
+			$attachment_id = tvr_blog_sideload_image_cached( $post_id, $dir . '/' . $file, $alt_fallback, $file, $alt_fallback );
+			if ( is_wp_error( $attachment_id ) ) continue;
+			$url      = wp_get_attachment_url( $attachment_id );
+			$rebuilt .= "\n" . '<img src="' . esc_url( $url ) . '" alt="' . esc_attr( $alt_fallback ) . '" style="display:block;margin:1.5em auto;width:100%;height:auto;" />';
+		}
+	}
+	return $rebuilt;
+}
+
+/**
  * @return array{post_id:int,created:bool,edit_url:string,orphaned:array}|WP_Error
  */
 function tvr_blog_import_folder( $dir ) {
@@ -625,6 +669,7 @@ function tvr_blog_import_folder( $dir ) {
 	$parsed       = $validated['parsed'];
 	$feature_path = $validated['feature_path'];
 	$feature_alt  = $validated['feature_alt'];
+	$auto_placed  = $validated['auto_placed'];
 	$orphaned     = $validated['orphaned'];
 	$existing     = $validated['existing'];
 
@@ -649,6 +694,7 @@ function tvr_blog_import_folder( $dir ) {
 		$img_html = '<img src="' . esc_url( wp_get_attachment_url( $attachment_id ) ) . '" alt="' . esc_attr( $img['alt'] ) . '" />';
 		$content  = str_replace( '<!--TVR_IMAGE_' . $i . '-->', $img_html, $content );
 	}
+	$content = tvr_blog_place_auto_images( $content, $dir, $post_id, $auto_placed, $parsed['title'] );
 	wp_update_post( array( 'ID' => $post_id, 'post_content' => $content ) );
 
 	$feature_id = tvr_blog_sideload_image_cached( $post_id, $feature_path, $parsed['title'], 'feature', $feature_alt ?: $parsed['title'] );
@@ -659,13 +705,22 @@ function tvr_blog_import_folder( $dir ) {
 
 	$meta = tvr_blog_parse_meta_txt( $meta_path );
 	tvr_blog_set_category( $post_id, $meta['category'] );
-	if ( ! empty( $meta['tags'] ) ) wp_set_object_terms( $post_id, $meta['tags'], 'post_tag', false );
+
+	// Tags can come from meta.txt and/or the docx's own `Tag` metadata
+	// field — merge both rather than picking one, since a real folder
+	// might only have either.
+	$docx_tags = '' !== $parsed['metadata']['tags']
+		? array_map( 'trim', explode( ',', $parsed['metadata']['tags'] ) )
+		: array();
+	$all_tags = array_values( array_unique( array_filter( array_merge( $meta['tags'], $docx_tags ) ) ) );
+	if ( ! empty( $all_tags ) ) wp_set_object_terms( $post_id, $all_tags, 'post_tag', false );
 
 	return array(
-		'post_id'  => $post_id,
-		'created'  => empty( $existing ),
-		'edit_url' => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
-		'orphaned' => $orphaned,
+		'post_id'     => $post_id,
+		'created'     => empty( $existing ),
+		'edit_url'    => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
+		'auto_placed' => $auto_placed,
+		'orphaned'    => $orphaned,
 	);
 }
 
@@ -680,7 +735,7 @@ function tvr_blog_list_content_drop_folders() {
  * no echo/print, so the CLI script and the admin page can each format the
  * same data their own way.
  *
- * @return array{slug:string,status:string,message:string,orphaned:array}[]
+ * @return array{slug:string,status:string,message:string,auto_placed:array,orphaned:array}[]
  */
 function tvr_blog_import_run_all() {
 	$results = array();
@@ -690,20 +745,21 @@ function tvr_blog_import_run_all() {
 		try {
 			$result = tvr_blog_import_folder( $dir );
 		} catch ( \Throwable $e ) {
-			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $e->getMessage(), 'orphaned' => array() );
+			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $e->getMessage(), 'auto_placed' => array(), 'orphaned' => array() );
 			continue;
 		}
 
 		if ( is_wp_error( $result ) ) {
-			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $result->get_error_message(), 'orphaned' => array() );
+			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $result->get_error_message(), 'auto_placed' => array(), 'orphaned' => array() );
 			continue;
 		}
 
 		$results[] = array(
-			'slug'     => $slug,
-			'status'   => $result['created'] ? 'created' : 'updated',
-			'message'  => $result['edit_url'],
-			'orphaned' => $result['orphaned'],
+			'slug'        => $slug,
+			'status'      => $result['created'] ? 'created' : 'updated',
+			'message'     => $result['edit_url'],
+			'auto_placed' => $result['auto_placed'],
+			'orphaned'    => $result['orphaned'],
 		);
 	}
 

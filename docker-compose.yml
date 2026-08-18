@@ -59,7 +59,7 @@ services:
         define('DISALLOW_FILE_EDIT', true);
     volumes:
       - ./wp-content/themes/universal-tv-remote:/var/www/html/wp-content/themes/universal-tv-remote
-      - ./wp-content/plugins/advanced-custom-fields:/var/www/html/wp-content/plugins/advanced-custom-fields
+      - ./wp-content/plugins:/var/www/html/wp-content/plugins
       - ./wp-content/uploads:/var/www/html/wp-content/uploads
     ports:
       - "${HTTP_PORT:-8080}:80"

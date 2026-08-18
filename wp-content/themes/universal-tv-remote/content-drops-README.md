@@ -63,8 +63,12 @@ renders the post title as the page's real heading). From **Title / Meta
 Description / Main Keyword**, the importer auto-fills Rank Math's SEO
 Title / Meta Description / Focus Keyword fields on the Draft — reviewable
 and editable in the Rank Math box same as always, just not blank to start.
-`Tag` and `Secondary Keywords` are parsed but not currently applied
-anywhere automatically.
+(Rank Math itself needs a one-time setup per environment before this
+works — if it's missing, wp-admin shows a notice with a one-click
+"Activate & Configure Rank Math" button, no server access needed.) `Tag`
+is merged into the post's WordPress tags (together with `meta.txt`'s
+`tags:` line, if both are present). `Secondary Keywords` is parsed but not
+currently applied anywhere.
 
 Body headings don't need any particular Word style — they're detected by
 size (a large bold line = H2, a smaller bold line = H3), matching what the
@@ -96,9 +100,15 @@ styles instead — no metadata block — still works too, as a fallback.)
 
   The image is inserted at that exact position in the post, using the text
   after `|` as its alt text (required — used for image SEO/accessibility).
-  Image files present in the folder but never referenced this way are left
-  out of the post and flagged as a warning (not an error) so nothing goes
-  missing silently.
+- **Unmarked images** (present in the folder, not the featured image, not
+  referenced by an `[image: ...]` marker) aren't left out — real content
+  folders often don't mark every image explicitly, so up to one per H2
+  section gets placed automatically, right after that section's heading
+  (centered, full width), in filename order. The admin preview table
+  always shows exactly which images got auto-placed this way before you
+  run the import. Only if there are *more* unmarked images than H2
+  sections does anything actually get left out — flagged as a warning, not
+  silently dropped.
 
 ## `meta.txt`
 
@@ -109,9 +119,9 @@ category: Troubleshooting
 tags: wifi, samsung, setup
 ```
 
-A category/tag that doesn't exist yet is created automatically. (Separate
-from the `.docx`'s own `Tag` metadata field above, which isn't wired into
-WordPress categories/tags yet.)
+A category/tag that doesn't exist yet is created automatically. Tags here
+are merged with the `.docx`'s own `Tag` metadata field above, not replaced
+by it.
 
 ## What the importer does NOT do
 
