@@ -15,11 +15,7 @@ imports successfully (no error) is moved into `content-drops/_imported/`
 right after — archived, not deleted, so the "ready to import" list doesn't
 keep piling up with already-done folders, but the original `.docx`/images
 are still there if ever needed again. Re-importing the same slug later
-replaces its old archived copy. An "Already imported" section at the
-bottom of the Import from Folder page lists everything archived, each
-with a "Re-import" button that moves it back to the pending list — needed
-whenever a folder should be re-processed after it's already been
-archived (e.g. a parsing fix landed and an old post needs refreshing).
+replaces its old archived copy.
 
 **Why `wp-content/uploads/` and not a folder inside the theme:** most WP
 hosting (this project's production included) makes `wp-content/themes/`

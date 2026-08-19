@@ -18,7 +18,7 @@ services:
       retries: 20
 
   wordpress:
-    image: 762871078113.dkr.ecr.ap-southeast-1.amazonaws.com/roku-tv-wordpress:dev 
+    image: 762871078113.dkr.ecr.ap-southeast-1.amazonaws.com/roku-tv-wordpress:prod 
     restart: unless-stopped
     depends_on:
       db:

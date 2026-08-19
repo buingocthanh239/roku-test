@@ -136,28 +136,6 @@ add_action( 'wp_ajax_tvr_upload_blog_folder', function () {
 	) );
 } );
 
-/**
- * Moves an archived (already-imported) folder back into the pending list
- * — e.g. a parsing fix landed since it was last run and the resulting
- * post needs refreshing. One nonce-protected link per folder, same
- * simple admin-post.php GET pattern as the Rank Math setup button
- * (inc/seo-rank-math.php) — no JS needed for a low-frequency single action.
- */
-add_action( 'admin_post_tvr_requeue_blog_folder', function () {
-	if ( ! current_user_can( 'edit_posts' ) ) wp_die( 'Not allowed.' );
-	check_admin_referer( 'tvr_requeue_blog_folder' );
-
-	$slug   = isset( $_GET['slug'] ) ? sanitize_title( wp_unslash( $_GET['slug'] ) ) : '';
-	$result = tvr_blog_requeue_content_drop_folder( $slug );
-
-	$redirect = admin_url( 'edit.php?page=tvr-import-blog-posts' );
-	if ( is_wp_error( $result ) ) {
-		$redirect = add_query_arg( 'tvr_requeue_error', rawurlencode( $result->get_error_message() ), $redirect );
-	}
-	wp_safe_redirect( $redirect );
-	exit;
-} );
-
 function tvr_render_import_blog_posts_page() {
 	if ( ! current_user_can( 'edit_posts' ) ) wp_die( 'Not allowed.' );
 
@@ -173,17 +151,11 @@ function tvr_render_import_blog_posts_page() {
 	}
 
 	$folders          = tvr_blog_list_content_drop_folders();
-	$archived_folders = tvr_blog_list_archived_content_drop_folders();
 	$upload_nonce     = wp_create_nonce( 'tvr_upload_blog_folder' );
 	$allowed_ext_list = implode( ', ', tvr_blog_upload_allowed_extensions() );
 	?>
 	<div class="wrap">
 		<h1>Import Blog Posts from Folder</h1>
-
-		<?php if ( isset( $_GET['tvr_requeue_error'] ) ) : ?>
-			<div class="notice notice-error"><p><?php echo esc_html( wp_unslash( $_GET['tvr_requeue_error'] ) ); ?></p></div>
-		<?php endif; ?>
-
 		<p>
 			See <code>content-drops-README.md</code> for the folder convention. Every
 			post is created/updated as a <strong>Draft</strong> — nothing here is ever
@@ -284,34 +256,6 @@ function tvr_render_import_blog_posts_page() {
 				<?php wp_nonce_field( 'tvr_run_blog_import' ); ?>
 				<?php submit_button( 'Run Import (' . count( $folders ) . ' folder' . ( 1 === count( $folders ) ? '' : 's' ) . ')', 'primary', 'submit', false ); ?>
 			</form>
-		<?php endif; ?>
-
-		<hr />
-
-		<h2>Already imported</h2>
-		<p>
-			Archived after a successful import (see above) — not shown to "Run
-			Import" anymore. Re-import one if it needs refreshing (e.g. after a fix
-			to how folders get parsed): it moves back to the pending list above,
-			ready to review and run again.
-		</p>
-		<?php if ( empty( $archived_folders ) ) : ?>
-			<p><em>Nothing archived yet.</em></p>
-		<?php else : ?>
-			<table class="wp-list-table widefat fixed striped" style="max-width:500px;">
-				<thead><tr><th>Folder</th><th style="width:1%"></th></tr></thead>
-				<tbody>
-				<?php foreach ( $archived_folders as $dir ) :
-					$slug        = basename( $dir );
-					$requeue_url = wp_nonce_url( admin_url( 'admin-post.php?action=tvr_requeue_blog_folder&slug=' . rawurlencode( $slug ) ), 'tvr_requeue_blog_folder' );
-				?>
-					<tr>
-						<td><code><?php echo esc_html( $slug ); ?></code></td>
-						<td><a href="<?php echo esc_url( $requeue_url ); ?>" class="button button-small">Re-import</a></td>
-					</tr>
-				<?php endforeach; ?>
-				</tbody>
-			</table>
 		<?php endif; ?>
 	</div>
 	<script>
