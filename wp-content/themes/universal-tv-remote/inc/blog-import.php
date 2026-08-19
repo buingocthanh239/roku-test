@@ -832,6 +832,37 @@ function tvr_blog_archive_content_drop_folder( $dir ) {
 	@rename( $dir, $dest );
 }
 
+/** List archived (already-imported) folders, for a "re-import this again" UI. */
+function tvr_blog_list_archived_content_drop_folders() {
+	$folders = glob( tvr_blog_content_drops_archive_dir() . '/*', GLOB_ONLYDIR );
+	return $folders ? $folders : array();
+}
+
+/**
+ * Moves an archived folder back into the pending list — e.g. the import
+ * logic changed since it was last run (a parsing fix, a new auto-fill
+ * feature) and the resulting post needs refreshing, but there's otherwise
+ * no way to get an already-imported folder back in front of "Run Import"
+ * once it's been archived.
+ *
+ * @return true|WP_Error
+ */
+function tvr_blog_requeue_content_drop_folder( $slug ) {
+	$slug = sanitize_title( $slug );
+	$src  = tvr_blog_content_drops_archive_dir() . '/' . $slug;
+	if ( ! is_dir( $src ) ) {
+		return new WP_Error( 'not_archived', "\"$slug\" isn't in the archive." );
+	}
+	$dest = tvr_blog_content_drops_dir() . '/' . $slug;
+	if ( file_exists( $dest ) ) {
+		return new WP_Error( 'already_pending', "\"$slug\" is already back in the pending list." );
+	}
+	if ( ! @rename( $src, $dest ) ) {
+		return new WP_Error( 'requeue_failed', "Couldn't move \"$slug\" out of the archive." );
+	}
+	return true;
+}
+
 /**
  * Runs every folder in content-drops/ and returns structured results —
  * no echo/print, so the CLI script and the admin page can each format the
