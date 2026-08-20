@@ -89,9 +89,19 @@ function tvr_docx_para_font_size( $p, $xpath ) {
 
 function tvr_docx_para_list_type( $p, $xpath, $numbering_map ) {
 	$node = $xpath->query( './w:pPr/w:numPr/w:numId', $p )->item( 0 );
-	if ( ! $node ) return null;
-	$num_id = $node->getAttributeNS( TVR_DOCX_NS_W, 'val' );
-	return $numbering_map[ $num_id ] ?? 'ul';
+	if ( $node ) {
+		$num_id = $node->getAttributeNS( TVR_DOCX_NS_W, 'val' );
+		return $numbering_map[ $num_id ] ?? 'ul';
+	}
+
+	// Docs exported with the `ListBullet`/`ListNumber` paragraph styles carry
+	// no `w:numPr` (and so no numbering.xml entry) at all — the style name is
+	// the only signal the paragraph is a list item. Without this they'd come
+	// through as ordinary <p> paragraphs.
+	$style = tvr_docx_para_style( $p, $xpath );
+	if ( preg_match( '/^ListBullet\d*$/i', $style ) ) return 'ul';
+	if ( preg_match( '/^ListNumber\d*$/i', $style ) ) return 'ol';
+	return null;
 }
 
 function tvr_docx_para_plain_text( $p, $xpath ) {
@@ -351,6 +361,26 @@ function tvr_docx_extract( $docx_path ) {
 		}
 	}
 
+	/*
+	 * Which HTML heading level each named Word style maps to depends on
+	 * where the title came from. The original plain-doc shape used
+	 * `Heading1` for the article title itself, so Heading2 = H2 and
+	 * Heading3 = H3. The content pipeline's newer docs put the title in a
+	 * real `Title`-styled paragraph (or in the folder's seo_info.txt) and
+	 * then use `Heading1` for the article's own sections — so everything
+	 * shifts down one level there: Heading1 = H2, Heading2 = H3,
+	 * Heading3 = H4. Decided once up front rather than per paragraph, so a
+	 * single document can never map the same style two different ways.
+	 * Size-based detection (docs with no styles at all) is unaffected.
+	 */
+	$heading_shift = ( '' !== $metadata['title'] ) ? 1 : 0;
+	for ( $i = $body_start; $i < $node_count && ! $heading_shift; $i++ ) {
+		$node = $body_children->item( $i );
+		if ( 'w:p' === $node->nodeName && 'Title' === tvr_docx_para_style( $node, $xpath ) ) {
+			$heading_shift = 1;
+		}
+	}
+
 	// --- Pass 2: the article body. ---
 	$title            = $metadata['title'];
 	$html             = array();
@@ -418,17 +448,20 @@ function tvr_docx_extract( $docx_path ) {
 			continue;
 		}
 
-		// Heading2/Heading3 named styles (plain-Word fallback shape), or —
-		// this pipeline's actual docs — direct font size with no style at
-		// all: ~17pt bold for H2, ~13pt bold for H3, with margin either
-		// side to tolerate minor size drift between documents.
-		$is_h2 = 'Heading2' === $style || ( '' === $style && $size >= 30 && $size < 40 );
-		$is_h3 = 'Heading3' === $style || ( '' === $style && $size >= 24 && $size < 30 );
+		// Named Heading styles (shifted or not, see $heading_shift above), or
+		// — docs with no paragraph styles at all — direct font size: ~17pt
+		// bold for H2, ~13pt bold for H3, with margin either side to tolerate
+		// minor size drift between documents.
+		$is_h2 = 'Heading' . ( 2 - $heading_shift ) === $style || ( '' === $style && $size >= 30 && $size < 40 );
+		$is_h3 = 'Heading' . ( 3 - $heading_shift ) === $style || ( '' === $style && $size >= 24 && $size < 30 );
+		$is_h4 = $heading_shift && 'Heading3' === $style;
 
 		if ( $is_h2 ) {
 			$html[] = "<h2>{$inner}</h2>";
 		} elseif ( $is_h3 ) {
 			$html[] = "<h3>{$inner}</h3>";
+		} elseif ( $is_h4 ) {
+			$html[] = "<h4>{$inner}</h4>";
 		} elseif ( 'Heading1' === $style && '' === $title ) {
 			$title = $plain;
 		} else {
@@ -517,26 +550,199 @@ function tvr_blog_sideload_image_cached( $post_id, $path, $title, $cache_key, $a
 	return $attachment_id;
 }
 
-function tvr_blog_parse_meta_txt( $path ) {
-	$meta = array( 'category' => '', 'tags' => array() );
-	if ( ! file_exists( $path ) ) return $meta;
-	foreach ( file( $path, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES ) as $line ) {
-		if ( ! preg_match( '/^([a-z_]+)\s*:\s*(.+)$/i', trim( $line ), $m ) ) continue;
-		$key = strtolower( trim( $m[1] ) );
-		$val = trim( $m[2] );
-		if ( 'category' === $key ) $meta['category'] = $val;
-		elseif ( 'tags' === $key ) $meta['tags'] = array_values( array_filter( array_map( 'trim', explode( ',', $val ) ) ) );
+/**
+ * Label -> field map for the folder's sidecar config file — `seo_info.txt`
+ * in the content pipeline's current folder structure, or the older
+ * `meta.txt`. Same idea as tvr_docx_metadata_labels() but for the .txt
+ * sidecar, whose real files label some fields in Vietnamese ("Từ khóa
+ * chính" = focus keyword, "Từ khóa phụ" = secondary keywords); both
+ * spellings are accepted for every field. As with the docx labels, treat
+ * this list as "known so far", not exhaustive.
+ */
+function tvr_blog_info_txt_labels() {
+	return array(
+		'title'              => 'title',
+		'tiêu đề'            => 'title',
+		'meta description'   => 'meta_description',
+		'meta_description'   => 'meta_description',
+		'description'        => 'meta_description',
+		'mô tả'              => 'meta_description',
+		'mô tả meta'         => 'meta_description',
+		'tag'                => 'tags',
+		'tags'               => 'tags',
+		'thẻ'                => 'tags',
+		'thẻ tag'            => 'tags',
+		'category'           => 'categories',
+		'categories'         => 'categories',
+		'chuyên mục'         => 'categories',
+		'danh mục'           => 'categories',
+		'focus keyword'      => 'focus_keyword',
+		'main keyword'       => 'focus_keyword',
+		'primary keyword'    => 'focus_keyword',
+		'từ khóa chính'      => 'focus_keyword',
+		'secondary keywords' => 'secondary_keywords',
+		'từ khóa phụ'        => 'secondary_keywords',
+		'outline'            => 'outline',
+		'dàn ý'              => 'outline',
+	);
+}
+
+/** Lowercases with the Vietnamese labels above in mind — plain strtolower() is byte-wise and would leave "Từ" as "từ" only by luck. */
+function tvr_blog_info_txt_normalize_label( $text ) {
+	$text = trim( $text );
+	$text = function_exists( 'mb_strtolower' ) ? mb_strtolower( $text, 'UTF-8' ) : strtolower( $text );
+	return trim( rtrim( $text, ':' ) );
+}
+
+/** A label alone on its own line ("Tag", or "Tag:") — its value follows on the next line(s). */
+function tvr_blog_info_txt_match_label( $line ) {
+	$labels = tvr_blog_info_txt_labels();
+	return $labels[ tvr_blog_info_txt_normalize_label( $line ) ] ?? null;
+}
+
+/** "Label: value" on one line — meta.txt's original shape, still accepted anywhere. */
+function tvr_blog_info_txt_match_inline( $line ) {
+	if ( ! preg_match( '/^([^:]{1,40}?)\s*:\s*(.+)$/u', trim( $line ), $m ) ) return null;
+	$field = tvr_blog_info_txt_match_label( $m[1] );
+	if ( null === $field ) return null;
+	return array( 'key' => $field, 'value' => trim( $m[2] ) );
+}
+
+/**
+ * Parse a sidecar config file into `field => array of raw value lines`.
+ * Both shapes real files use are handled and can be mixed in one file: a
+ * label alone on its own line with its value on the following line(s) (the
+ * seo_info.txt shape — values like "Từ khóa phụ" and "Outline" genuinely
+ * run over many lines), or "Label: value" on a single line (meta.txt's).
+ *
+ * @return array<string,string[]>
+ */
+function tvr_blog_parse_info_txt( $path ) {
+	$fields = array();
+	if ( ! file_exists( $path ) ) return $fields;
+
+	$raw = (string) file_get_contents( $path );
+	$raw = preg_replace( '/^\xEF\xBB\xBF/', '', $raw ); // UTF-8 BOM, if the file was saved from Windows
+	$current = null;
+
+	foreach ( preg_split( '/\R/u', $raw ) as $line ) {
+		$line = trim( $line );
+		if ( '' === $line ) continue;
+
+		$label = tvr_blog_info_txt_match_label( $line );
+		if ( $label ) {
+			$current = $label;
+			if ( ! isset( $fields[ $label ] ) ) $fields[ $label ] = array();
+			continue;
+		}
+
+		$inline = tvr_blog_info_txt_match_inline( $line );
+		if ( $inline ) {
+			$fields[ $inline['key'] ][] = $inline['value'];
+			$current = null; // self-contained — nothing for a following line to continue onto
+			continue;
+		}
+
+		if ( null === $current ) continue; // stray text before any label (a heading, a note) — ignored
+		$fields[ $current ][] = $line;
+	}
+
+	return $fields;
+}
+
+/** Collapse tvr_blog_parse_info_txt()'s raw line lists into usable scalar/list values. */
+function tvr_blog_info_txt_to_meta( $fields ) {
+	$join = function ( $key ) use ( $fields ) {
+		return isset( $fields[ $key ] ) ? trim( implode( ' ', $fields[ $key ] ) ) : '';
+	};
+	// Comma or semicolon separated, and/or one per line — real files have
+	// used every combination of those.
+	$list = function ( $key ) use ( $fields ) {
+		$out = array();
+		foreach ( $fields[ $key ] ?? array() as $line ) {
+			foreach ( preg_split( '/[,;]/u', $line ) as $piece ) {
+				$piece = trim( $piece );
+				if ( '' !== $piece ) $out[] = $piece;
+			}
+		}
+		return array_values( array_unique( $out ) );
+	};
+
+	return array(
+		'title'              => $join( 'title' ),
+		'meta_description'   => $join( 'meta_description' ),
+		'focus_keyword'      => $join( 'focus_keyword' ),
+		'secondary_keywords' => isset( $fields['secondary_keywords'] ) ? implode( ', ', $fields['secondary_keywords'] ) : '',
+		'tags'               => $list( 'tags' ),
+		'categories'         => $list( 'categories' ),
+	);
+}
+
+/** The folder's sidecar config file(s), keyed by base name — `seo_info.txt` and/or the older `meta.txt`. */
+function tvr_blog_info_txt_paths( $dir ) {
+	$found = array();
+	foreach ( glob( $dir . '/*.txt' ) as $file ) {
+		$base = strtolower( pathinfo( $file, PATHINFO_FILENAME ) );
+		if ( in_array( $base, array( 'seo_info', 'meta' ), true ) ) $found[ $base ] = $file;
+	}
+	return $found;
+}
+
+/**
+ * The post's final metadata: the folder's sidecar config file(s) merged
+ * over whatever the .docx itself declared. The two sources overlap by
+ * design — older folders carry the metadata block inside the .docx, the
+ * current folder structure carries it in `seo_info.txt` instead, and
+ * either may be the only one present. Scalars take the sidecar's value
+ * when it has one (it's the explicit per-post config), tags are the union
+ * of both, and categories only ever come from the sidecar.
+ *
+ * @return array{title:string,meta_description:string,focus_keyword:string,secondary_keywords:string,tags:string[],categories:string[]}
+ */
+function tvr_blog_collect_post_meta( $dir, $parsed ) {
+	$docx    = $parsed['metadata'];
+	$scalars = array( 'title', 'meta_description', 'focus_keyword', 'secondary_keywords' );
+	$sidecar = array_fill_keys( $scalars, '' ) + array( 'tags' => array(), 'categories' => array() );
+
+	// meta.txt first, seo_info.txt second, so seo_info.txt wins wherever a
+	// folder happens to carry both and they disagree.
+	$paths = tvr_blog_info_txt_paths( $dir );
+	foreach ( array( 'meta', 'seo_info' ) as $base ) {
+		if ( empty( $paths[ $base ] ) ) continue;
+		$one = tvr_blog_info_txt_to_meta( tvr_blog_parse_info_txt( $paths[ $base ] ) );
+		foreach ( $scalars as $key ) {
+			if ( '' !== $one[ $key ] ) $sidecar[ $key ] = $one[ $key ];
+		}
+		$sidecar['tags']       = array_merge( $sidecar['tags'], $one['tags'] );
+		$sidecar['categories'] = array_merge( $sidecar['categories'], $one['categories'] );
+	}
+
+	// Split on comma OR semicolon: different real docs have used either as
+	// the separator for the docx's own `Tag` field.
+	$docx_tags = '' !== $docx['tags'] ? preg_split( '/[,;]/u', $docx['tags'] ) : array();
+
+	$meta = array(
+		'tags'       => array_values( array_unique( array_filter( array_map( 'trim', array_merge( $sidecar['tags'], $docx_tags ) ) ) ) ),
+		'categories' => array_values( array_unique( array_filter( array_map( 'trim', $sidecar['categories'] ) ) ) ),
+	);
+	foreach ( $scalars as $key ) {
+		$meta[ $key ] = '' !== $sidecar[ $key ] ? $sidecar[ $key ] : $docx[ $key ];
 	}
 	return $meta;
 }
 
-function tvr_blog_set_category( $post_id, $name ) {
-	if ( '' === $name ) return;
-	$term = term_exists( $name, 'category' );
-	if ( ! $term ) $term = wp_insert_term( $name, 'category' );
-	if ( is_wp_error( $term ) ) return;
-	$term_id = (int) ( is_array( $term ) ? $term['term_id'] : $term );
-	wp_set_object_terms( $post_id, array( $term_id ), 'category', false );
+/** Assigns (creating as needed) the post's categories, replacing whatever it had — including core's default "Uncategorized". */
+function tvr_blog_set_categories( $post_id, $names ) {
+	if ( empty( $names ) ) return;
+	$term_ids = array();
+	foreach ( $names as $name ) {
+		if ( '' === $name ) continue;
+		$term = term_exists( $name, 'category' );
+		if ( ! $term ) $term = wp_insert_term( $name, 'category' );
+		if ( is_wp_error( $term ) ) continue;
+		$term_ids[] = (int) ( is_array( $term ) ? $term['term_id'] : $term );
+	}
+	if ( $term_ids ) wp_set_object_terms( $post_id, $term_ids, 'category', false );
 }
 
 /**
@@ -547,7 +753,7 @@ function tvr_blog_set_category( $post_id, $name ) {
  * a folder before deciding to import it. Used by both the real import
  * (below) and the admin page's folder listing/upload preview.
  *
- * @return array{slug:string,parsed:array,feature_path:string,feature_alt:string,feature_auto:bool,auto_placed:array,orphaned:array,existing:WP_Post[]}|WP_Error
+ * @return array{slug:string,parsed:array,meta:array,feature_path:string,feature_alt:string,feature_auto:bool,auto_placed:array,orphaned:array,existing:WP_Post[]}|WP_Error
  */
 function tvr_blog_validate_folder( $dir ) {
 	$slug = basename( $dir );
@@ -669,6 +875,7 @@ function tvr_blog_validate_folder( $dir ) {
 	return array(
 		'slug'         => $slug,
 		'parsed'       => $parsed,
+		'meta'         => tvr_blog_collect_post_meta( $dir, $parsed ),
 		'feature_path' => $feature_path,
 		'feature_alt'  => $feature_alt,
 		'feature_auto' => $feature_auto,
@@ -680,8 +887,9 @@ function tvr_blog_validate_folder( $dir ) {
 
 /**
  * Auto-fills Rank Math's per-post SEO Title/Meta Description/Focus Keyword
- * from the docx metadata block (Title/Meta Description/Main Keyword), when
- * present — same meta keys Rank Math's own Yoast/AIOSEO importers write to
+ * from the folder's collected metadata (tvr_blog_collect_post_meta() —
+ * seo_info.txt/meta.txt over the docx's own metadata block), when present
+ * — same meta keys Rank Math's own Yoast/AIOSEO importers write to
  * (`includes/admin/importers/class-yoast.php`), confirmed against the
  * installed plugin's source rather than guessed. The editor still reviews
  * and can change any of these in the Rank Math box — this just means they
@@ -723,26 +931,28 @@ function tvr_blog_place_auto_images( $content, $dir, $post_id, $auto_placed, $al
 }
 
 /**
- * @return array{post_id:int,created:bool,edit_url:string,orphaned:array}|WP_Error
+ * @return array{post_id:int,created:bool,edit_url:string,auto_placed:array,orphaned:array,categories:array,tags:array}|WP_Error
  */
 function tvr_blog_import_folder( $dir ) {
-	$meta_path = $dir . '/meta.txt';
-
 	$validated = tvr_blog_validate_folder( $dir );
 	if ( is_wp_error( $validated ) ) return $validated;
 
 	$slug         = $validated['slug'];
 	$parsed       = $validated['parsed'];
+	$meta         = $validated['meta'];
 	$feature_path = $validated['feature_path'];
 	$feature_alt  = $validated['feature_alt'];
 	$auto_placed  = $validated['auto_placed'];
 	$orphaned     = $validated['orphaned'];
 	$existing     = $validated['existing'];
 
+	// The sidecar config's `Title` is the post's title when it has one —
+	// it's the explicit per-post config; the .docx's own heading is the
+	// fallback for folders that don't ship a seo_info.txt/meta.txt.
 	$post_args = array(
 		'post_type'   => 'post',
 		'post_status' => 'draft',
-		'post_title'  => $parsed['title'],
+		'post_title'  => '' !== $meta['title'] ? $meta['title'] : $parsed['title'],
 		'post_name'   => $slug,
 	);
 	if ( $existing ) {
@@ -767,20 +977,9 @@ function tvr_blog_import_folder( $dir ) {
 	if ( is_wp_error( $feature_id ) ) return $feature_id;
 	set_post_thumbnail( $post_id, $feature_id );
 
-	tvr_blog_set_rank_math_meta( $post_id, $parsed['metadata'] );
-
-	$meta = tvr_blog_parse_meta_txt( $meta_path );
-	tvr_blog_set_category( $post_id, $meta['category'] );
-
-	// Tags can come from meta.txt and/or the docx's own `Tag` metadata
-	// field — merge both rather than picking one, since a real folder
-	// might only have either. Split on comma OR semicolon: different real
-	// docs have used either as the list separator for this field.
-	$docx_tags = '' !== $parsed['metadata']['tags']
-		? array_map( 'trim', preg_split( '/[,;]/', $parsed['metadata']['tags'] ) )
-		: array();
-	$all_tags = array_values( array_unique( array_filter( array_merge( $meta['tags'], $docx_tags ) ) ) );
-	if ( ! empty( $all_tags ) ) wp_set_object_terms( $post_id, $all_tags, 'post_tag', false );
+	tvr_blog_set_rank_math_meta( $post_id, $meta );
+	tvr_blog_set_categories( $post_id, $meta['categories'] );
+	if ( ! empty( $meta['tags'] ) ) wp_set_object_terms( $post_id, $meta['tags'], 'post_tag', false );
 
 	return array(
 		'post_id'     => $post_id,
@@ -788,6 +987,8 @@ function tvr_blog_import_folder( $dir ) {
 		'edit_url'    => admin_url( 'post.php?post=' . $post_id . '&action=edit' ),
 		'auto_placed' => $auto_placed,
 		'orphaned'    => $orphaned,
+		'categories'  => $meta['categories'],
+		'tags'        => $meta['tags'],
 	);
 }
 
@@ -837,7 +1038,7 @@ function tvr_blog_archive_content_drop_folder( $dir ) {
  * no echo/print, so the CLI script and the admin page can each format the
  * same data their own way.
  *
- * @return array{slug:string,status:string,message:string,auto_placed:array,orphaned:array}[]
+ * @return array{slug:string,status:string,message:string,auto_placed:array,orphaned:array,categories:array,tags:array}[]
  */
 function tvr_blog_import_run_all() {
 	$results = array();
@@ -847,12 +1048,12 @@ function tvr_blog_import_run_all() {
 		try {
 			$result = tvr_blog_import_folder( $dir );
 		} catch ( \Throwable $e ) {
-			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $e->getMessage(), 'auto_placed' => array(), 'orphaned' => array() );
+			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $e->getMessage(), 'auto_placed' => array(), 'orphaned' => array(), 'categories' => array(), 'tags' => array() );
 			continue;
 		}
 
 		if ( is_wp_error( $result ) ) {
-			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $result->get_error_message(), 'auto_placed' => array(), 'orphaned' => array() );
+			$results[] = array( 'slug' => $slug, 'status' => 'error', 'message' => $result->get_error_message(), 'auto_placed' => array(), 'orphaned' => array(), 'categories' => array(), 'tags' => array() );
 			continue;
 		}
 
@@ -864,6 +1065,8 @@ function tvr_blog_import_run_all() {
 			'message'     => $result['edit_url'],
 			'auto_placed' => $result['auto_placed'],
 			'orphaned'    => $result['orphaned'],
+			'categories'  => $result['categories'],
+			'tags'        => $result['tags'],
 		);
 	}
 

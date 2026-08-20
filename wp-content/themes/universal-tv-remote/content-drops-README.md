@@ -32,7 +32,9 @@ Each folder must contain:
 
 - **Exactly one `.docx` file** — any filename (e.g. named after the article
   title, however it naturally comes out of the content pipeline).
-- **A featured image** and **`meta.txt`** — see below.
+- **`seo_info.txt`** — the per-post config (title, meta description, tags,
+  categories, keywords). See below.
+- **A featured image** — see below.
 - Any other image files referenced from the `.docx` as inline images (see
   the `[image: ...]` marker below).
 
@@ -69,17 +71,27 @@ blank to start. (Rank Math itself needs a one-time setup per environment
 before this works — if it's missing, wp-admin shows a notice with a
 one-click "Activate & Configure Rank Math" button, no server access
 needed.) `Tag` is merged into the post's WordPress tags (together with
-`meta.txt`'s `tags:` line, if both are present; splits on comma or
+`seo_info.txt`'s own `Tag` field, if both are present; splits on comma or
 semicolon — seen both ways in practice). `Secondary Keywords` is parsed
-but not currently applied anywhere.
+but not currently applied anywhere. Note this block is the *older* way of
+carrying a post's metadata — folders in the current structure put it in
+`seo_info.txt` instead (see below), and that file is also the only place
+**categories** can be set.
 
-Body headings don't need any particular Word style — they're detected by
-size (a large bold line = H2, a smaller bold line = H3), matching what the
-pipeline's docs actually use. Lists, tables, and **bold**/*italic* text are
-carried through as-is.
+Body headings work either way — docs that use no paragraph styles at all
+are detected by size (a large bold line = H2, a smaller bold line = H3),
+and docs that use real Word `Heading 1`/`Heading 2`/`Heading 3` styles are
+mapped by style. In the styled case the level depends on where the title
+came from:
 
-(A plain doc using real Word `Heading 1`/`Heading 2`/`Title` paragraph
-styles instead — no metadata block — still works too, as a fallback.)
+| Title comes from | `Heading 1` | `Heading 2` | `Heading 3` |
+| --- | --- | --- | --- |
+| a `Title`-styled paragraph, or `seo_info.txt` | `<h2>` | `<h3>` | `<h4>` |
+| `Heading 1` itself (older docs, no `Title` style) | *the post title* | `<h2>` | `<h3>` |
+
+Lists, tables, and **bold**/*italic* text are carried through as-is —
+including bullets written with the `ListBullet`/`ListNumber` paragraph
+styles, which Word exports without any list-numbering markup of their own.
 
 ## Images
 
@@ -113,18 +125,61 @@ styles instead — no metadata block — still works too, as a fallback.)
   sections does anything actually get left out — flagged as a warning, not
   silently dropped.
 
-## `meta.txt`
+## `seo_info.txt`
 
-Plain `key: value` lines, just:
+The folder's per-post config — a label on its own line, its value on the
+line(s) below it:
 
 ```
-category: Troubleshooting
-tags: wifi, samsung, setup
+Title
+How to Pair Universal Remote to TV: Complete Setup Guide for Any Smart TV
+
+Meta description
+Learn how to pair universal remote to tv with or without codes.
+
+Tag
+Universal Remote, TV Remote Setup, Smart TV, Remote Pairing
+
+Categories
+Remote Setup Guides
+
+Từ khóa chính
+how to pair universal remote to tv
+
+Từ khóa phụ
+how to pair universal remote with tv
+how to sync universal remote to tv
+
+Outline
+1. What You Need Before Pairing a Universal Remote
+2. ...
 ```
 
-A category/tag that doesn't exist yet is created automatically. Tags here
-are merged with the `.docx`'s own `Tag` metadata field above, not replaced
-by it.
+`Label: value` on one line works too, and the two shapes can be mixed in
+the same file.
+
+| Label (either spelling) | Goes to |
+| --- | --- |
+| `Title` / `Tiêu đề` | The post title + Rank Math's SEO Title |
+| `Meta description` / `Mô tả` | Rank Math's Meta Description |
+| `Tag` / `Tags` / `Thẻ` | The post's WordPress **tags** |
+| `Categories` / `Category` / `Chuyên mục` / `Danh mục` | The post's WordPress **categories** |
+| `Từ khóa chính` / `Main Keyword` / `Primary Keyword` / `Focus Keyword` | Rank Math's Focus Keyword |
+| `Từ khóa phụ` / `Secondary Keywords` | Parsed, not currently applied anywhere |
+| `Outline` / `Dàn ý` | Ignored (it's the writer's own working outline) |
+
+`Tag` and `Categories` both accept a comma- or semicolon-separated list on
+one line, or one entry per line. A category or tag that doesn't exist yet
+is created automatically, and the assigned categories replace whatever the
+draft had before — including WordPress's default "Uncategorized".
+
+Tags are the **union** of this file's `Tag` line and the `.docx`'s own
+`Tag` metadata field (for older docs that carry one), not one or the
+other. For every other field, this file wins where it has a value.
+
+The older **`meta.txt`** (`category: ...` / `tags: ...` lines) is still
+read, for folders that already have one — `seo_info.txt` takes precedence
+where a folder somehow has both.
 
 ## What the importer does NOT do
 

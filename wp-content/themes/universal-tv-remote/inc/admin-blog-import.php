@@ -159,10 +159,12 @@ function tvr_render_import_blog_posts_page() {
 		<p>
 			See <code>content-drops-README.md</code> for the folder convention. Every
 			post is created/updated as a <strong>Draft</strong> — nothing here is ever
-			published. SEO Title/Meta Description/Focus Keyword are auto-filled from
-			the docx when it has that metadata — still worth reviewing in the Rank
-			Math box before the post goes out. A folder that imports successfully is
-			moved out of this list automatically (into an
+			published. Title/Meta Description/Focus Keyword (Rank Math) plus the
+			post's <strong>Tags</strong> and <strong>Categories</strong> are filled in
+			from the folder's <code>seo_info.txt</code> config file (or, for older
+			folders, the docx's own metadata block / <code>meta.txt</code>) — still
+			worth reviewing before the post goes out. A folder that imports
+			successfully is moved out of this list automatically (into an
 			<code>_imported/</code> subfolder, not deleted — the original files are
 			still there if ever needed again).
 		</p>
@@ -184,6 +186,12 @@ function tvr_render_import_blog_posts_page() {
 								<?php else : ?>
 									<span style="color:#008a20;">✓ <?php echo esc_html( ucfirst( $r['status'] ) ); ?></span>
 									— <a href="<?php echo esc_url( $r['message'] ); ?>">Edit post</a>
+									<?php if ( $r['categories'] ) : ?>
+										<br />Categories: <?php echo esc_html( implode( ', ', $r['categories'] ) ); ?>
+									<?php endif; ?>
+									<?php if ( $r['tags'] ) : ?>
+										<br />Tags: <?php echo esc_html( implode( ', ', $r['tags'] ) ); ?>
+									<?php endif; ?>
 									<?php if ( $r['auto_placed'] ) : ?>
 										<br /><span style="color:#996800;">Auto-placed one per H2 section: <?php echo esc_html( implode( ', ', $r['auto_placed'] ) ); ?></span>
 									<?php endif; ?>
@@ -236,6 +244,16 @@ function tvr_render_import_blog_posts_page() {
 								— "<?php echo esc_html( $validated['parsed']['title'] ); ?>"
 								(<?php echo count( $validated['parsed']['images'] ); ?> inline image<?php echo 1 === count( $validated['parsed']['images'] ) ? '' : 's'; ?>)
 								<?php echo $validated['existing'] ? ' — will <strong>update</strong> an existing draft' : ' — will <strong>create</strong> a new draft'; ?>
+								<?php if ( $validated['meta']['categories'] ) : ?>
+									<br />Categories: <?php echo esc_html( implode( ', ', $validated['meta']['categories'] ) ); ?>
+								<?php else : ?>
+									<br /><span style="color:#996800;">No category — add a <code>Category</code> line to the folder's <code>seo_info.txt</code> to set one</span>
+								<?php endif; ?>
+								<?php if ( $validated['meta']['tags'] ) : ?>
+									<br />Tags: <?php echo esc_html( implode( ', ', $validated['meta']['tags'] ) ); ?>
+								<?php else : ?>
+									<br /><span style="color:#996800;">No tags — add a <code>Tag</code> line to the folder's <code>seo_info.txt</code> to set some</span>
+								<?php endif; ?>
 								<?php if ( $validated['feature_auto'] ) : ?>
 									<br /><span style="color:#996800;">Featured image: auto-picked <code><?php echo esc_html( basename( $validated['feature_path'] ) ); ?></code> (no <code>[feature: ...]</code> marker or <code>feature.&lt;ext&gt;</code> file — add one to choose a different image instead)</span>
 								<?php endif; ?>
